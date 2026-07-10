@@ -13,7 +13,7 @@ func build() -> void:
 	layout.add_theme_constant_override("separation", 14)
 	add_child(UIKit.vmargin(layout))
 
-	layout.add_child(UIKit.title("⛨ Checkpoint", 36))
+	layout.add_child(UIKit.title("CHECKPOINT", 36))
 	layout.add_child(UIKit.body("Djup %d. Du helas till full styrka." % run.current_depth, 18))
 
 	var essence_panel := UIKit.panel()
@@ -22,7 +22,7 @@ func build() -> void:
 	essence_panel.add_child(essence_label)
 	if not run.unsecured_items.is_empty():
 		essence_panel.get_child(0).text += (
-			"   •   Osäkrad loot: %d föremål" % run.unsecured_items.size()
+			"   ·   Osäkrad loot: %d föremål" % run.unsecured_items.size()
 		)
 	layout.add_child(essence_panel)
 
@@ -33,7 +33,7 @@ func build() -> void:
 			UIKit
 			. body(
 				(
-					"⚠ Du har fortfarande en obärgad Essens-hög (%d) på djup %d. Dör du ersätts den och försvinner för alltid!"
+					"OBS! Du har fortfarande en obärgad Essens-hög (%d) på djup %d. Dör du ersätts den och försvinner för alltid!"
 					% [
 						int(character.death_pile.get("essence", 0)),
 						int(character.death_pile.get("depth", 1))
@@ -55,7 +55,7 @@ func build() -> void:
 	layout.add_child(shop_button)
 
 	var stay_button := UIKit.primary_button(
-		"✓  STANNA – säkra %d Essens och avsluta" % run.carried_essence, 104
+		"STANNA – säkra %d Essens och avsluta" % run.carried_essence, 104
 	)
 	stay_button.pressed.connect(
 		func():
@@ -67,11 +67,11 @@ func build() -> void:
 	# US-1.3: djupare segment kräver nivå – tydlig indikation.
 	var lock_reason := run.deeper_lock_reason(character)
 	if lock_reason != "":
-		var lock_label := UIKit.body("🔒 " + lock_reason, 17)
+		var lock_label := UIKit.body("Låst: " + lock_reason, 17)
 		lock_label.add_theme_color_override("font_color", UIKit.COLOR_WARN)
 		layout.add_child(lock_label)
 	else:
-		var deeper_button := UIKit.primary_button("⬇  FORTSÄTT DJUPARE – riskera allt", 104)
+		var deeper_button := UIKit.primary_button("FORTSÄTT DJUPARE – riskera allt", 104)
 		deeper_button.pressed.connect(
 			func():
 				Game.save_game()

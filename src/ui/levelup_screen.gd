@@ -15,7 +15,7 @@ func build() -> void:
 	layout.add_child(
 		UIKit.body(
 			(
-				"Kämpe %d  •  Magiker %d  •  Skugga %d   (3 i samma riktning ger klass)"
+				"Kämpe %d  ·  Magiker %d  ·  Skugga %d   (3 i samma riktning ger klass)"
 				% [
 					int(character.class_axis_points["fighter"]),
 					int(character.class_axis_points["mage"]),

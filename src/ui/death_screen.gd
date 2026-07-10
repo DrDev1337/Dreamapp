@@ -10,7 +10,7 @@ func build() -> void:
 	add_child(UIKit.vmargin(layout))
 
 	layout.add_child(UIKit.spacer(60))
-	layout.add_child(UIKit.title("☠ DU FÖLL", 44))
+	layout.add_child(UIKit.title("DU FÖLL", 44))
 	layout.add_child(UIKit.body("Djupet krävde sitt.", 18))
 	layout.add_child(UIKit.spacer(20))
 
@@ -30,7 +30,7 @@ func build() -> void:
 		)
 	)
 	if summary.get("replaced_old_pile", false):
-		var warn := UIKit.body("⚠ Din tidigare obärgade hög gick förlorad för alltid.", 17)
+		var warn := UIKit.body("OBS! Din tidigare obärgade hög gick förlorad för alltid.", 17)
 		warn.add_theme_color_override("font_color", UIKit.COLOR_WARN)
 		box.add_child(warn)
 	box.add_child(UIKit.body("Dina permanenta uppgraderingar och nivåer är kvar.", 16))

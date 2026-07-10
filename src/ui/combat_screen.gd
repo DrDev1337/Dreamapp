@@ -29,7 +29,7 @@ func build() -> void:
 		elif combat.enemies[int(key)]["hp"] > 0:
 			order_names.append(String(combat.enemies[int(key)]["name"]))
 	layout.add_child(
-		UIKit.body("Runda %d   Tur: %s" % [combat.round_number, " → ".join(order_names)], 15)
+		UIKit.body("Runda %d   Tur: %s" % [combat.round_number, " » ".join(order_names)], 15)
 	)
 
 	# Fiender – tryck för att välja mål.
@@ -97,9 +97,9 @@ func _enemy_panel(combat: CombatEngine, index: int) -> Control:
 	button.custom_minimum_size = Vector2(0, 110)
 	button.disabled = enemy["hp"] <= 0
 	var box := VBoxContainer.new()
-	box.set_anchors_preset(Control.PRESET_FULL_RECT)
+	box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var mark := "▶ " if index == selected_target and enemy["hp"] > 0 else ""
+	var mark := "» " if index == selected_target and enemy["hp"] > 0 else ""
 	var phase_mark := (
 		"  [FAS 2]" if enemy.get("is_boss", false) and int(enemy.get("phase", 1)) == 2 else ""
 	)
@@ -124,17 +124,17 @@ func _status_text(unit: Dictionary) -> String:
 	for status in unit["statuses"]:
 		match String(status["id"]):
 			"poison":
-				parts.append("🟢gift")
+				parts.append("gift")
 			"stun":
-				parts.append("💫bedövad")
+				parts.append("bedövad")
 			"shield":
-				parts.append("🛡%d" % int(status.get("amount", 0)))
+				parts.append("sköld %d" % int(status.get("amount", 0)))
 			"atk_up":
-				parts.append("⚔+")
+				parts.append("atk+")
 			"slow":
-				parts.append("🐌")
+				parts.append("seg")
 			"evade":
-				parts.append("👻")
+				parts.append("undvik")
 	return " ".join(parts)
 
 

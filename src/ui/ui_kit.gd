@@ -145,7 +145,7 @@ static func vmargin(child: Control, margin := 24) -> MarginContainer:
 	container.add_theme_constant_override("margin_right", margin)
 	container.add_theme_constant_override("margin_top", margin)
 	container.add_theme_constant_override("margin_bottom", margin)
-	container.set_anchors_preset(Control.PRESET_FULL_RECT)
+	container.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	container.add_child(child)
 	return container
 

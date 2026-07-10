@@ -31,23 +31,23 @@ func build() -> void:
 	)
 	layout.add_child(hp_label)
 
-	# Kartan: en rad per rum (US-7.1). ☠ markerar dödshögen (US-2.4).
+	# Kartan: en rad per rum (US-7.1). Dödshögen markeras på sin rad (US-2.4).
 	var map_panel := UIKit.panel()
 	var map_box := VBoxContainer.new()
 	for room in run.rooms:
 		var depth := int(room["depth"])
 		var marker := (
-			"▶ "
+			"» "
 			if depth == run.current_depth + 1
-			else ("✓ " if depth <= run.current_depth else "   ")
+			else ("· " if depth <= run.current_depth else "   ")
 		)
 		var pile_mark := (
-			"  ☠ din Essens!" if room.get("has_pile", false) and character.has_death_pile() else ""
+			"  (din Essens!)" if room.get("has_pile", false) and character.has_death_pile() else ""
 		)
-		var checkpoint_mark := "  ⛨ checkpoint efter" if room.get("checkpoint_after", false) else ""
+		var checkpoint_mark := "  · checkpoint efter" if room.get("checkpoint_after", false) else ""
 		var lock_mark := ""
 		if character.level < Balance.required_level_for_depth(depth):
-			lock_mark = "  🔒 nivå %d" % Balance.required_level_for_depth(depth)
+			lock_mark = "  låst: nivå %d" % Balance.required_level_for_depth(depth)
 		var row := UIKit.body(
 			(
 				"%sDjup %d – %s%s%s%s"
@@ -72,9 +72,7 @@ func build() -> void:
 	if int(event.get("recovered_essence", 0)) > 0:
 		var recovered := UIKit.panel(Color("204030"))
 		recovered.add_child(
-			UIKit.body(
-				"☠→✓ Du hämtar din tappade Essens: +%d!" % int(event["recovered_essence"]), 19
-			)
+			UIKit.body("Du hämtar din tappade Essens: +%d!" % int(event["recovered_essence"]), 19)
 		)
 		layout.add_child(recovered)
 	var chest_item: Dictionary = event.get("chest_item", {})
@@ -98,7 +96,7 @@ func build() -> void:
 		var next_room: Dictionary = run.rooms[run.current_depth]
 		var descend_button := UIKit.primary_button(
 			(
-				"⬇  Gå vidare – Djup %d: %s"
+				"Gå vidare – Djup %d: %s"
 				% [int(next_room["depth"]), RunGenerator.room_label(next_room)]
 			),
 			100

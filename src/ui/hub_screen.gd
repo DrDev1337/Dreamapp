@@ -15,7 +15,7 @@ func build() -> void:
 	layout.add_child(
 		UIKit.body(
 			(
-				"Nivå %d %s   •   XP %d/%d"
+				"Nivå %d %s   ·   XP %d/%d"
 				% [character.level, class_label, character.xp, character.xp_to_next()]
 			),
 			18
@@ -36,7 +36,7 @@ func build() -> void:
 			UIKit
 			. body(
 				(
-					"☠ Din tappade Essens (%d) ligger på djup %d.\nNå dit i nästa run för att hämta den – dör du igen försvinner den!"
+					"Din tappade Essens (%d) ligger på djup %d.\nNå dit i nästa run för att hämta den – dör du igen försvinner den!"
 					% [int(pile.get("essence", 0)), int(pile.get("depth", 1))]
 				),
 				17
@@ -80,7 +80,7 @@ func build() -> void:
 	layout.add_child(stats_panel)
 
 	layout.add_child(UIKit.spacer(8))
-	var start_button := UIKit.primary_button("⚔  STARTA RUN", 110)
+	var start_button := UIKit.primary_button("STARTA RUN", 110)
 	start_button.pressed.connect(main.begin_run)
 	layout.add_child(start_button)
 

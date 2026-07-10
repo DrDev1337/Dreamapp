@@ -62,16 +62,16 @@ func _slot_row(slot: int) -> Control:
 	row.add_theme_constant_override("separation", 10)
 	var button: Button
 	if summary.is_empty():
-		button = UIKit.big_button("＋  Skapa karaktär", 96)
+		button = UIKit.big_button("+  Skapa karaktär", 96)
 		button.pressed.connect(func(): _start_creating(slot))
 	else:
 		var class_label: String = LevelUp.AXIS_LABELS.get(summary["class_identity"], "Oklassad")
-		var suffix := "\n⚔ pågående run" if summary["has_active_run"] else ""
+		var suffix := "\n– pågående run" if summary["has_active_run"] else ""
 		button = UIKit.big_button(
 			"%s  –  Nivå %d %s%s" % [summary["name"], summary["level"], class_label, suffix], 96
 		)
 		button.pressed.connect(func(): _select(slot))
-		var delete_button := UIKit.big_button("✕", 96)
+		var delete_button := UIKit.big_button("X", 96)
 		delete_button.custom_minimum_size = Vector2(88, 96)
 		delete_button.pressed.connect(func(): _confirm_delete(slot))
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -97,7 +97,7 @@ func _build_name_picker() -> void:
 	name_panel.add_child(name_label)
 	layout.add_child(name_panel)
 
-	var reroll_button := UIKit.big_button("🎲  Slumpa nytt namn", 88)
+	var reroll_button := UIKit.big_button("Slumpa nytt namn", 88)
 	reroll_button.pressed.connect(
 		func():
 			_roll_name()
@@ -109,7 +109,7 @@ func _build_name_picker() -> void:
 	filler.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	layout.add_child(filler)
 
-	var create_button := UIKit.primary_button("✓  Börja som %s" % suggested_name, 104)
+	var create_button := UIKit.primary_button("Börja som %s" % suggested_name, 104)
 	create_button.pressed.connect(
 		func():
 			Game.create_character(creating_slot, suggested_name)

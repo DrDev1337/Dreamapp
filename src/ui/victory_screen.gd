@@ -11,7 +11,7 @@ func build() -> void:
 	add_child(UIKit.vmargin(layout))
 
 	layout.add_child(UIKit.spacer(60))
-	layout.add_child(UIKit.title("✓ RUN AVSLUTAD", 40))
+	layout.add_child(UIKit.title("RUN AVSLUTAD", 40))
 	layout.add_child(UIKit.spacer(20))
 
 	var panel := UIKit.panel(Color("204030"))
@@ -23,7 +23,7 @@ func build() -> void:
 	box.add_child(UIKit.body("Bankad Essens totalt: %d" % character.banked_essence, 18))
 	box.add_child(
 		UIKit.body(
-			"Nivå %d   •   Runs avklarade: %d" % [character.level, character.runs_completed], 16
+			"Nivå %d   ·   Runs avklarade: %d" % [character.level, character.runs_completed], 16
 		)
 	)
 	if character.bosses_defeated > 0:
