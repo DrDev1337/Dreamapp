@@ -2,12 +2,13 @@ class_name LevelUp
 ## Genererar level-up-val (US-4.2): 2-3 alternativ som drar mot
 ## fighter, mage eller rogue. Ett val = statbonus och/eller ny ability.
 
-const AXIS_LABELS := {"fighter": "Kämpe", "mage": "Magiker", "rogue": "Skugga"}
+const AXIS_LABELS := {"fighter": "Fighter", "mage": "Mage", "rogue": "Rogue"}
 
 const STAT_CHOICES := {
 	"fighter": {"stats": {"max_hp": 8, "attack": 2}, "desc": "+8 HP, +2 attack"},
-	"mage": {"stats": {"magic": 3, "max_mana": 3}, "desc": "+3 magi, +3 mana"},
-	"rogue": {"stats": {"speed": 1, "attack": 1, "max_hp": 4}, "desc": "+1 fart, +1 attack, +4 HP"},
+	"mage": {"stats": {"magic": 3, "max_mana": 3}, "desc": "+3 magic, +3 mana"},
+	"rogue":
+	{"stats": {"speed": 1, "attack": 1, "max_hp": 4}, "desc": "+1 speed, +1 attack, +4 HP"},
 }
 
 
@@ -32,7 +33,7 @@ static func generate_choices(character: CharacterState, rng: RandomNumberGenerat
 			var ability_id: String = unlearned[rng.randi_range(0, unlearned.size() - 1)]
 			choice["ability_id"] = ability_id
 			var ab := Abilities.get_ability(ability_id)
-			choice["desc"] = String(choice["desc"]) + " + ny förmåga: " + String(ab["name"])
+			choice["desc"] = String(choice["desc"]) + " + new ability: " + String(ab["name"])
 		choices.append(choice)
 	return choices
 

@@ -11,9 +11,9 @@ func build() -> void:
 	layout.add_theme_constant_override("separation", 12)
 	add_child(UIKit.vmargin(layout))
 
-	layout.add_child(UIKit.title("Djup %d / %d" % [run.current_depth, run.rooms.size()], 30))
+	layout.add_child(UIKit.title("Depth %d / %d" % [run.current_depth, run.rooms.size()], 30))
 
-	var essence_label := UIKit.body("Buren Essens: %d  (osäkrad!)" % run.carried_essence, 22)
+	var essence_label := UIKit.body("Carried Essence: %d  (unbanked!)" % run.carried_essence, 22)
 	essence_label.add_theme_color_override("font_color", UIKit.COLOR_ESSENCE)
 	layout.add_child(essence_label)
 
@@ -40,16 +40,18 @@ func build() -> void:
 		var depth := int(room["depth"])
 		var marker := "» " if depth == run.current_depth + 1 else ""
 		var pile_mark := (
-			"  + din Essens!" if room.get("has_pile", false) and character.has_death_pile() else ""
+			"  + your Essence!"
+			if room.get("has_pile", false) and character.has_death_pile()
+			else ""
 		)
-		var checkpoint_mark := "  · checkpoint efter" if room.get("checkpoint_after", false) else ""
+		var checkpoint_mark := "  · checkpoint after" if room.get("checkpoint_after", false) else ""
 		var lock_mark := ""
 		var locked: bool = character.level < Balance.required_level_for_depth(depth)
 		if locked:
-			lock_mark = "  låst: nivå %d" % Balance.required_level_for_depth(depth)
+			lock_mark = "  locked: level %d" % Balance.required_level_for_depth(depth)
 		var text_label := UIKit.body(
 			(
-				"%sDjup %d – %s%s%s%s"
+				"%sDepth %d – %s%s%s%s"
 				% [
 					marker,
 					depth,
@@ -80,7 +82,7 @@ func build() -> void:
 	if int(event.get("recovered_essence", 0)) > 0:
 		var recovered := UIKit.panel(Color("204030"))
 		recovered.add_child(
-			UIKit.body("Du hämtar din tappade Essens: +%d!" % int(event["recovered_essence"]), 19)
+			UIKit.body("You reclaim your lost Essence: +%d!" % int(event["recovered_essence"]), 19)
 		)
 		layout.add_child(recovered)
 	var chest_item: Dictionary = event.get("chest_item", {})
@@ -93,7 +95,7 @@ func build() -> void:
 	layout.add_child(filler)
 
 	if run.is_run_complete():
-		var done_button := UIKit.big_button("Runnen är klar – till hubben", 100)
+		var done_button := UIKit.big_button("Run complete – return to hub", 100)
 		done_button.pressed.connect(
 			func():
 				var banked := Game.complete_run()
@@ -104,7 +106,7 @@ func build() -> void:
 		var next_room: Dictionary = run.rooms[run.current_depth]
 		var descend_button := UIKit.primary_button(
 			(
-				"Gå vidare – Djup %d: %s"
+				"Descend – Depth %d: %s"
 				% [int(next_room["depth"]), RunGenerator.room_label(next_room)]
 			),
 			100
@@ -116,17 +118,17 @@ func build() -> void:
 func _chest_offer(item: Dictionary) -> Control:
 	var panel := UIKit.panel(Color("2a2440"))
 	var box := VBoxContainer.new()
-	var name_label := UIKit.body("Kista! Du hittar: %s" % Items.describe(item), 19)
+	var name_label := UIKit.body("A chest! You find: %s" % Items.describe(item), 19)
 	name_label.add_theme_color_override(
 		"font_color", UIKit.RARITY_COLORS.get(item.get("rarity", "common"), Color.WHITE)
 	)
 	box.add_child(name_label)
 	var current: Dictionary = Game.character.equipment.get(item["slot"], {})
 	if not current.is_empty():
-		box.add_child(UIKit.body("Nuvarande: %s" % Items.describe(current), 16))
+		box.add_child(UIKit.body("Current: %s" % Items.describe(current), 16))
 	var buttons := HBoxContainer.new()
 	buttons.add_theme_constant_override("separation", 10)
-	var equip_button := UIKit.big_button("Utrusta", 70)
+	var equip_button := UIKit.big_button("Equip", 70)
 	equip_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	equip_button.pressed.connect(
 		func():
@@ -134,7 +136,7 @@ func _chest_offer(item: Dictionary) -> Control:
 			Game.save_game()
 			main.show_run()
 	)
-	var skip_button := UIKit.big_button("Lämna", 70)
+	var skip_button := UIKit.big_button("Leave", 70)
 	skip_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	skip_button.pressed.connect(func(): main.show_run())
 	buttons.add_child(equip_button)

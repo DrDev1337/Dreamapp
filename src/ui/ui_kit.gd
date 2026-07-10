@@ -188,7 +188,7 @@ static func popup(parent: Node, popup_title: String, text: String) -> void:
 	var dialog := AcceptDialog.new()
 	dialog.title = popup_title
 	dialog.dialog_text = text
-	dialog.ok_button_text = "Uppfattat"
+	dialog.ok_button_text = "Got it"
 	parent.add_child(dialog)
 	dialog.popup_centered(Vector2i(560, 0))
 	dialog.confirmed.connect(dialog.queue_free)

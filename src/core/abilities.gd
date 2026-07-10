@@ -10,7 +10,7 @@ const CATALOG := {
 	{
 		"id": "basic_attack",
 		"name": "Attack",
-		"desc": "Ett enkelt hugg.",
+		"desc": "A simple strike.",
 		"axis": "none",
 		"mana_cost": 0,
 		"cooldown": 0,
@@ -21,8 +21,8 @@ const CATALOG := {
 	"focus_strike":
 	{
 		"id": "focus_strike",
-		"name": "Fokuserat slag",
-		"desc": "Ett kraftfullt slag. Kostar mana.",
+		"name": "Focused Strike",
+		"desc": "A powerful blow. Costs mana.",
 		"axis": "none",
 		"mana_cost": 3,
 		"cooldown": 0,
@@ -34,8 +34,8 @@ const CATALOG := {
 	"power_strike":
 	{
 		"id": "power_strike",
-		"name": "Kraftslag",
-		"desc": "Tungt slag med hög skada.",
+		"name": "Power Strike",
+		"desc": "A heavy blow with high damage.",
 		"axis": "fighter",
 		"mana_cost": 4,
 		"cooldown": 0,
@@ -46,8 +46,8 @@ const CATALOG := {
 	"shield_bash":
 	{
 		"id": "shield_bash",
-		"name": "Sköldstöt",
-		"desc": "Skadar och bedövar fienden en tur.",
+		"name": "Shield Bash",
+		"desc": "Damages and stuns the enemy for a turn.",
 		"axis": "fighter",
 		"mana_cost": 5,
 		"cooldown": 2,
@@ -59,8 +59,8 @@ const CATALOG := {
 	"war_cry":
 	{
 		"id": "war_cry",
-		"name": "Stridsrop",
-		"desc": "+50% attack i 3 turer.",
+		"name": "War Cry",
+		"desc": "+50% attack for 3 turns.",
 		"axis": "fighter",
 		"mana_cost": 4,
 		"cooldown": 3,
@@ -72,8 +72,8 @@ const CATALOG := {
 	"berserk":
 	{
 		"id": "berserk",
-		"name": "Bärsärk",
-		"desc": "Signatur: enormt slag mot alla fiender.",
+		"name": "Berserk",
+		"desc": "Signature: a massive blow against all enemies.",
 		"axis": "fighter",
 		"mana_cost": 8,
 		"cooldown": 4,
@@ -86,8 +86,8 @@ const CATALOG := {
 	"firebolt":
 	{
 		"id": "firebolt",
-		"name": "Eldpil",
-		"desc": "Magisk skada som delvis ignorerar rustning.",
+		"name": "Firebolt",
+		"desc": "Magic damage that partly ignores armor.",
 		"axis": "mage",
 		"mana_cost": 3,
 		"cooldown": 0,
@@ -98,8 +98,8 @@ const CATALOG := {
 	"frost_nova":
 	{
 		"id": "frost_nova",
-		"name": "Frostnova",
-		"desc": "Skadar alla fiender och sänker deras fart.",
+		"name": "Frost Nova",
+		"desc": "Damages all enemies and slows them.",
 		"axis": "mage",
 		"mana_cost": 6,
 		"cooldown": 2,
@@ -111,8 +111,8 @@ const CATALOG := {
 	"arcane_shield":
 	{
 		"id": "arcane_shield",
-		"name": "Arkan sköld",
-		"desc": "Absorberar skada i 3 turer.",
+		"name": "Arcane Shield",
+		"desc": "Absorbs damage for 3 turns.",
 		"axis": "mage",
 		"mana_cost": 5,
 		"cooldown": 3,
@@ -125,7 +125,7 @@ const CATALOG := {
 	{
 		"id": "meteor",
 		"name": "Meteor",
-		"desc": "Signatur: förödande magi mot alla fiender.",
+		"desc": "Signature: devastating magic against all enemies.",
 		"axis": "mage",
 		"mana_cost": 10,
 		"cooldown": 4,
@@ -138,8 +138,8 @@ const CATALOG := {
 	"backstab":
 	{
 		"id": "backstab",
-		"name": "Ryggdolk",
-		"desc": "Dubbel skada mot oskadda fiender.",
+		"name": "Backstab",
+		"desc": "Double damage against unharmed enemies.",
 		"axis": "rogue",
 		"mana_cost": 3,
 		"cooldown": 0,
@@ -151,8 +151,8 @@ const CATALOG := {
 	"poison_blade":
 	{
 		"id": "poison_blade",
-		"name": "Giftklinga",
-		"desc": "Skadar och förgiftar i 3 turer.",
+		"name": "Poison Blade",
+		"desc": "Damages and poisons for 3 turns.",
 		"axis": "rogue",
 		"mana_cost": 4,
 		"cooldown": 1,
@@ -164,8 +164,8 @@ const CATALOG := {
 	"evasion":
 	{
 		"id": "evasion",
-		"name": "Undanglidning",
-		"desc": "Undviker nästa attack.",
+		"name": "Evasion",
+		"desc": "Evades the next attack.",
 		"axis": "rogue",
 		"mana_cost": 4,
 		"cooldown": 3,
@@ -177,8 +177,8 @@ const CATALOG := {
 	"shadow_dance":
 	{
 		"id": "shadow_dance",
-		"name": "Skuggdans",
-		"desc": "Signatur: slå två gånger denna tur.",
+		"name": "Shadow Dance",
+		"desc": "Signature: strike twice this turn.",
 		"axis": "rogue",
 		"mana_cost": 8,
 		"cooldown": 4,

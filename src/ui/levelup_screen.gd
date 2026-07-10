@@ -10,12 +10,12 @@ func build() -> void:
 	layout.add_theme_constant_override("separation", 14)
 	add_child(UIKit.vmargin(layout))
 
-	layout.add_child(UIKit.title("LEVEL UP!  Nivå %d" % character.level, 36))
-	layout.add_child(UIKit.body("Välj din väg (%d val kvar):" % remaining, 18))
+	layout.add_child(UIKit.title("LEVEL UP!  Level %d" % character.level, 36))
+	layout.add_child(UIKit.body("Choose your path (%d picks left):" % remaining, 18))
 	layout.add_child(
 		UIKit.body(
 			(
-				"Kämpe %d  ·  Magiker %d  ·  Skugga %d   (3 i samma riktning ger klass)"
+				"Fighter %d  ·  Mage %d  ·  Rogue %d   (3 picks in one path unlocks a class)"
 				% [
 					int(character.class_axis_points["fighter"]),
 					int(character.class_axis_points["mage"]),
@@ -47,8 +47,8 @@ func _pick(choice: Dictionary, remaining: int) -> void:
 		var signature := Abilities.get_ability(Abilities.SIGNATURE_BY_AXIS[axis])
 		UIKit.popup(
 			main,
-			"Klass upplåst: %s!" % LevelUp.AXIS_LABELS[axis],
-			"Du har funnit din väg och lär dig signaturförmågan %s." % signature["name"]
+			"Class unlocked: %s!" % LevelUp.AXIS_LABELS[axis],
+			"You have found your path and learn the signature ability %s." % signature["name"]
 		)
 	if remaining > 1:
 		data["remaining"] = remaining - 1

@@ -124,7 +124,7 @@ func _write_to_disk() -> void:
 	}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file == null:
-		push_error("Kunde inte skriva save-fil: %s" % FileAccess.get_open_error())
+		push_error("Could not write save file: %s" % FileAccess.get_open_error())
 		return
 	file.store_string(JSON.stringify(payload))
 	file.close()
@@ -139,7 +139,7 @@ func load_game() -> void:
 	var parsed = JSON.parse_string(file.get_as_text())
 	file.close()
 	if parsed == null or not (parsed is Dictionary):
-		push_error("Korrupt save-fil, startar om från noll.")
+		push_error("Corrupt save file, starting fresh.")
 		return
 	ads_removed = parsed.get("ads_removed", false)
 	var loaded_slots: Array = parsed.get("slots", [])

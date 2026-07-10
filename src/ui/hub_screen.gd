@@ -10,7 +10,7 @@ func build() -> void:
 	layout.add_theme_constant_override("separation", 14)
 	add_child(UIKit.vmargin(layout))
 
-	var class_label: String = LevelUp.AXIS_LABELS.get(character.class_identity, "Oklassad")
+	var class_label: String = LevelUp.AXIS_LABELS.get(character.class_identity, "Classless")
 	# Klassemblem bredvid namnet när en klass är låst.
 	if character.class_identity != "":
 		var emblem_row := HBoxContainer.new()
@@ -27,7 +27,7 @@ func build() -> void:
 	layout.add_child(
 		UIKit.body(
 			(
-				"Nivå %d %s   ·   XP %d/%d"
+				"Level %d %s   ·   XP %d/%d"
 				% [character.level, class_label, character.xp, character.xp_to_next()]
 			),
 			18
@@ -35,7 +35,7 @@ func build() -> void:
 	)
 
 	var essence_panel := UIKit.panel()
-	var essence_label := UIKit.body("Bankad Essens: %d" % character.banked_essence, 24)
+	var essence_label := UIKit.body("Banked Essence: %d" % character.banked_essence, 24)
 	essence_label.add_theme_color_override("font_color", UIKit.COLOR_ESSENCE)
 	essence_panel.add_child(Icons.labeled(Icons.ESSENCE, essence_label, 34, UIKit.COLOR_ESSENCE))
 	layout.add_child(essence_panel)
@@ -48,7 +48,7 @@ func build() -> void:
 			UIKit
 			. body(
 				(
-					"Din tappade Essens (%d) ligger på djup %d.\nNå dit i nästa run för att hämta den – dör du igen försvinner den!"
+					"Your lost Essence (%d) lies at depth %d.\nReach it next run to reclaim it – die again and it is gone forever!"
 					% [int(pile.get("essence", 0)), int(pile.get("depth", 1))]
 				),
 				17
@@ -64,7 +64,7 @@ func build() -> void:
 	stats_box.add_child(
 		UIKit.body(
 			(
-				"HP %d   Attack %d   Magi %d   Fart %d   Rustning %d   Mana %d"
+				"HP %d   Attack %d   Magic %d   Speed %d   Armor %d   Mana %d"
 				% [
 					character.total_stat("max_hp"),
 					character.total_stat("attack"),
@@ -86,27 +86,27 @@ func build() -> void:
 		)
 	if not character.pending_boosts.is_empty():
 		stats_box.add_child(
-			UIKit.body("Boosts inför nästa run: %d st" % character.pending_boosts.size(), 16)
+			UIKit.body("Boosts for next run: %d" % character.pending_boosts.size(), 16)
 		)
 	stats_panel.add_child(stats_box)
 	layout.add_child(stats_panel)
 
 	layout.add_child(UIKit.spacer(8))
-	var start_button := UIKit.primary_button("STARTA RUN", 110)
+	var start_button := UIKit.primary_button("START RUN", 110)
 	start_button.pressed.connect(main.begin_run)
 	layout.add_child(start_button)
 
-	var shop_button := UIKit.big_button("Uppgraderingar")
+	var shop_button := UIKit.big_button("Upgrades")
 	shop_button.pressed.connect(func(): main.show_shop("hub"))
 	layout.add_child(shop_button)
 
-	var switch_button := UIKit.big_button("Byt karaktär", 64)
+	var switch_button := UIKit.big_button("Switch character", 64)
 	switch_button.pressed.connect(main.show_slots)
 	layout.add_child(switch_button)
 
 	# US-10.2: engångsköp för ad-free, synligt i hubben.
 	if not Game.ads_removed:
-		var iap_button := UIKit.big_button("Ta bort reklam – 49 kr (engångsköp)", 64)
+		var iap_button := UIKit.big_button("Remove ads – one-time purchase", 64)
 		iap_button.pressed.connect(
 			func():
 				Ads.purchase_remove_ads()
@@ -118,9 +118,9 @@ func build() -> void:
 func _slot_label(slot: String) -> String:
 	match slot:
 		"weapon":
-			return "Vapen"
+			return "Weapon"
 		"armor":
-			return "Rustning"
+			return "Armor"
 		"trinket":
-			return "Smycke"
+			return "Trinket"
 	return slot

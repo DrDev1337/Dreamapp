@@ -13,30 +13,30 @@ func build() -> void:
 	var skull := Icons.image(Icons.SKULL, 80, Color("d8b0b0"))
 	skull.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	layout.add_child(skull)
-	layout.add_child(UIKit.title("DU FÖLL", 44))
-	layout.add_child(UIKit.body("Djupet krävde sitt.", 18))
+	layout.add_child(UIKit.title("YOU FELL", 44))
+	layout.add_child(UIKit.body("The depths claimed their due.", 18))
 	layout.add_child(UIKit.spacer(20))
 
 	var panel := UIKit.panel(Color("402020"))
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 8)
-	box.add_child(UIKit.body("Tappad Essens: %d" % int(summary.get("lost_essence", 0)), 22))
+	box.add_child(UIKit.body("Essence lost: %d" % int(summary.get("lost_essence", 0)), 22))
 	if int(summary.get("lost_items", 0)) > 0:
-		box.add_child(UIKit.body("Tappad loot: %d föremål" % int(summary.get("lost_items", 0)), 18))
+		box.add_child(UIKit.body("Loot lost: %d items" % int(summary.get("lost_items", 0)), 18))
 	box.add_child(
 		UIKit.body(
 			(
-				"Allt ligger kvar på djup %d. Nå dit i nästa run för att hämta tillbaka det."
+				"It all remains at depth %d. Reach it next run to take it back."
 				% int(summary.get("depth", 1))
 			),
 			17
 		)
 	)
 	if summary.get("replaced_old_pile", false):
-		var warn := UIKit.body("OBS! Din tidigare obärgade hög gick förlorad för alltid.", 17)
+		var warn := UIKit.body("Warning! Your previous unclaimed pile is lost forever.", 17)
 		warn.add_theme_color_override("font_color", UIKit.COLOR_WARN)
 		box.add_child(warn)
-	box.add_child(UIKit.body("Dina permanenta uppgraderingar och nivåer är kvar.", 16))
+	box.add_child(UIKit.body("Your permanent upgrades and levels remain.", 16))
 	panel.add_child(box)
 	layout.add_child(panel)
 
@@ -44,6 +44,6 @@ func build() -> void:
 	filler.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	layout.add_child(filler)
 
-	var hub_button := UIKit.big_button("Till hubben", 100)
+	var hub_button := UIKit.big_button("Return to hub", 100)
 	hub_button.pressed.connect(main.return_to_hub_with_ad)
 	layout.add_child(hub_button)

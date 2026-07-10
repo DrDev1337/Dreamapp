@@ -6,8 +6,8 @@ config_version=5
 
 [application]
 
-config/name="Essens"
-config/description="Turbaserat roguelite-RPG för mobil. Samla Essens, riskera allt, gå djupare."
+config/name="Essence"
+config/description="Turn-based roguelite RPG for mobile. Harvest Essence, risk it all, go deeper."
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
 

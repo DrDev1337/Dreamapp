@@ -16,7 +16,7 @@ func show_interstitial_between_runs() -> void:
 		interstitial_closed.emit()
 		return
 	# TODO: riktig annons här. Stubben "visar" ingenting och går vidare direkt.
-	print("[Ads] Interstitial skulle visas här (mellan runs).")
+	print("[Ads] An interstitial would show here (between runs).")
 	interstitial_closed.emit()
 
 
@@ -24,4 +24,4 @@ func show_interstitial_between_runs() -> void:
 func purchase_remove_ads() -> void:
 	Game.ads_removed = true
 	Game.save_game()
-	print("[Ads] Reklam borttagen (IAP-stub).")
+	print("[Ads] Ads removed (IAP stub).")

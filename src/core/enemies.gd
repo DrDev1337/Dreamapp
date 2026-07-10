@@ -12,7 +12,7 @@ const CATALOG := {
 	"cave_rat":
 	{
 		"id": "cave_rat",
-		"name": "Grottråtta",
+		"name": "Cave Rat",
 		"behavior": "melee",
 		"hp": 18,
 		"attack": 5,
@@ -24,7 +24,7 @@ const CATALOG := {
 	"skeleton_archer":
 	{
 		"id": "skeleton_archer",
-		"name": "Skelettskytt",
+		"name": "Skeleton Archer",
 		"behavior": "ranged",
 		"hp": 14,
 		"attack": 7,
@@ -36,7 +36,7 @@ const CATALOG := {
 	"cultist_healer":
 	{
 		"id": "cultist_healer",
-		"name": "Kultist",
+		"name": "Cultist",
 		"behavior": "healer",
 		"hp": 16,
 		"attack": 4,
@@ -49,7 +49,7 @@ const CATALOG := {
 	"stone_golem":
 	{
 		"id": "stone_golem",
-		"name": "Stengolem",
+		"name": "Stone Golem",
 		"behavior": "tank",
 		"hp": 34,
 		"attack": 6,
@@ -61,7 +61,7 @@ const CATALOG := {
 	"imp":
 	{
 		"id": "imp",
-		"name": "Vätte",
+		"name": "Imp",
 		"behavior": "berserker",
 		"hp": 15,
 		"attack": 6,
@@ -73,7 +73,7 @@ const CATALOG := {
 	"grave_warden":
 	{
 		"id": "grave_warden",
-		"name": "Gravväktaren",
+		"name": "The Grave Warden",
 		"behavior": "miniboss",
 		"hp": 70,
 		"attack": 9,
@@ -86,7 +86,7 @@ const CATALOG := {
 	"heart_of_depths":
 	{
 		"id": "heart_of_depths",
-		"name": "Djupets Hjärta",
+		"name": "Heart of the Depths",
 		"behavior": "boss",
 		"hp": 140,
 		"attack": 11,

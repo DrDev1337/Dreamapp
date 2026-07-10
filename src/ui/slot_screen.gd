@@ -49,7 +49,7 @@ func _build_slot_list() -> void:
 	var crystal := Icons.image(Icons.ESSENCE, 72, UIKit.COLOR_ESSENCE)
 	crystal.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	layout.add_child(crystal)
-	var game_title := UIKit.title("ESSENS", 56)
+	var game_title := UIKit.title("ESSENCE", 56)
 	game_title.add_theme_color_override("font_color", Color("cfc4f5"))
 	game_title.add_theme_color_override(
 		"font_shadow_color",
@@ -57,7 +57,7 @@ func _build_slot_list() -> void:
 	)
 	layout.add_child(game_title)
 	layout.add_child(UIKit.divider())
-	var tagline := UIKit.body("Samla Essens. Riskera allt. Gå djupare.", 18)
+	var tagline := UIKit.body("Harvest Essence. Risk it all. Go deeper.", 18)
 	tagline.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	tagline.add_theme_color_override("font_color", Color(1, 1, 1, 0.6))
 	layout.add_child(tagline)
@@ -72,13 +72,13 @@ func _slot_row(slot: int) -> Control:
 	row.add_theme_constant_override("separation", 10)
 	var button: Button
 	if summary.is_empty():
-		button = UIKit.big_button("+  Skapa karaktär", 96)
+		button = UIKit.big_button("+  Create character", 96)
 		button.pressed.connect(func(): _start_creating(slot))
 	else:
-		var class_label: String = LevelUp.AXIS_LABELS.get(summary["class_identity"], "Oklassad")
-		var suffix := "\n– pågående run" if summary["has_active_run"] else ""
+		var class_label: String = LevelUp.AXIS_LABELS.get(summary["class_identity"], "Classless")
+		var suffix := "\n– run in progress" if summary["has_active_run"] else ""
 		button = UIKit.big_button(
-			"%s  –  Nivå %d %s%s" % [summary["name"], summary["level"], class_label, suffix], 96
+			"%s  –  Level %d %s%s" % [summary["name"], summary["level"], class_label, suffix], 96
 		)
 		button.pressed.connect(func(): _select(slot))
 		var delete_button := UIKit.big_button("X", 96)
@@ -98,7 +98,7 @@ func _build_name_picker() -> void:
 	layout.add_theme_constant_override("separation", 16)
 	add_child(UIKit.vmargin(layout))
 	layout.add_child(UIKit.spacer(60))
-	layout.add_child(UIKit.title("Ny karaktär", 38))
+	layout.add_child(UIKit.title("New character", 38))
 	layout.add_child(UIKit.spacer(10))
 
 	var name_panel := UIKit.panel()
@@ -107,7 +107,7 @@ func _build_name_picker() -> void:
 	name_panel.add_child(name_label)
 	layout.add_child(name_panel)
 
-	var reroll_button := UIKit.big_button("Slumpa nytt namn", 88)
+	var reroll_button := UIKit.big_button("Reroll name", 88)
 	reroll_button.pressed.connect(
 		func():
 			_roll_name()
@@ -119,7 +119,7 @@ func _build_name_picker() -> void:
 	filler.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	layout.add_child(filler)
 
-	var create_button := UIKit.primary_button("Börja som %s" % suggested_name, 104)
+	var create_button := UIKit.primary_button("Begin as %s" % suggested_name, 104)
 	create_button.pressed.connect(
 		func():
 			Game.create_character(creating_slot, suggested_name)
@@ -127,7 +127,7 @@ func _build_name_picker() -> void:
 	)
 	layout.add_child(create_button)
 
-	var cancel_button := UIKit.big_button("Avbryt", 72)
+	var cancel_button := UIKit.big_button("Cancel", 72)
 	cancel_button.pressed.connect(
 		func():
 			creating_slot = -1
@@ -155,10 +155,10 @@ func _select(slot: int) -> void:
 
 func _confirm_delete(slot: int) -> void:
 	var dialog := ConfirmationDialog.new()
-	dialog.title = "Radera karaktär?"
-	dialog.dialog_text = "All progression för karaktären försvinner permanent."
-	dialog.ok_button_text = "Radera"
-	dialog.cancel_button_text = "Avbryt"
+	dialog.title = "Delete character?"
+	dialog.dialog_text = "All progress for this character will be lost permanently."
+	dialog.ok_button_text = "Delete"
+	dialog.cancel_button_text = "Cancel"
 	add_child(dialog)
 	dialog.popup_centered()
 	dialog.confirmed.connect(

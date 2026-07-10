@@ -16,7 +16,7 @@ func build() -> void:
 	header.alignment = BoxContainer.ALIGNMENT_CENTER
 	header.add_theme_constant_override("separation", 12)
 	header.add_child(Icons.image(Icons.ANVIL, 38, UIKit.COLOR_ACCENT))
-	header.add_child(UIKit.title("Uppgraderingar", 32))
+	header.add_child(UIKit.title("Upgrades", 32))
 	layout.add_child(header)
 	layout.add_child(_currency_label())
 
@@ -33,13 +33,13 @@ func build() -> void:
 		permanent_list.add_child(_permanent_row(id))
 
 	var boost_tab := _scrollable()
-	boost_tab.name = "Denna run" if context == "checkpoint" else "Nästa run"
+	boost_tab.name = "This run" if context == "checkpoint" else "Next run"
 	tabs.add_child(boost_tab)
 	var boost_list: VBoxContainer = boost_tab.get_child(0)
 	for id in Upgrades.TEMPORARY:
 		boost_list.add_child(_temporary_row(id))
 
-	var back_button := UIKit.big_button("Tillbaka")
+	var back_button := UIKit.big_button("Back")
 	back_button.pressed.connect(
 		func():
 			if context == "checkpoint":
@@ -64,8 +64,8 @@ func _currency_label() -> Label:
 	var amount := (
 		Game.run.carried_essence if context == "checkpoint" else Game.character.banked_essence
 	)
-	var source := "buren" if context == "checkpoint" else "bankad"
-	var label := UIKit.body("Essens (%s): %d" % [source, amount], 22)
+	var source := "carried" if context == "checkpoint" else "banked"
+	var label := UIKit.body("Essence (%s): %d" % [source, amount], 22)
 	label.add_theme_color_override("font_color", UIKit.COLOR_ESSENCE)
 	return label
 
@@ -80,7 +80,7 @@ func _permanent_row(id: String) -> Control:
 		text = "%s  (MAX)\n%s" % [up["name"], up["desc"]]
 	else:
 		text = (
-			"%s  rank %d/%d  –  %d Essens\n%s"
+			"%s  rank %d/%d  –  %d Essence\n%s"
 			% [up["name"], rank, int(up["max_rank"]), cost, up["desc"]]
 		)
 	var button := UIKit.big_button(text, 96)
@@ -92,7 +92,7 @@ func _permanent_row(id: String) -> Control:
 				Game.save_game()  # autosave vid köp (US-11.2)
 				rebuild()
 			else:
-				UIKit.popup(self, "Kan inte köpa", "Du har inte tillräckligt med Essens.")
+				UIKit.popup(self, "Cannot buy", "You do not have enough Essence.")
 	)
 	return button
 
@@ -100,7 +100,7 @@ func _permanent_row(id: String) -> Control:
 func _temporary_row(id: String) -> Control:
 	var boost: Dictionary = Upgrades.TEMPORARY[id]
 	var button := UIKit.big_button(
-		"%s  –  %d Essens\n%s" % [boost["name"], int(boost["cost"]), boost["desc"]], 96
+		"%s  –  %d Essence\n%s" % [boost["name"], int(boost["cost"]), boost["desc"]], 96
 	)
 	button.pressed.connect(
 		func():
@@ -109,6 +109,6 @@ func _temporary_row(id: String) -> Control:
 				Game.save_game()
 				rebuild()
 			else:
-				UIKit.popup(self, "Kan inte köpa", "Du har inte tillräckligt med Essens.")
+				UIKit.popup(self, "Cannot buy", "You do not have enough Essence.")
 	)
 	return button

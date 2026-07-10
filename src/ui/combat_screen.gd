@@ -43,8 +43,8 @@ func build() -> void:
 			UIKit
 			. popup(
 				self,
-				"Strid",
-				"Striderna är turbaserade – ta den tid du behöver. Tryck på en fiende för att välja mål och sedan på en förmåga för att agera."
+				"Combat",
+				"Combat is turn-based – take all the time you need. Tap an enemy to pick a target, then tap an ability to act."
 			)
 		)
 
@@ -162,10 +162,10 @@ func _refresh(animate: bool) -> void:
 	var order_names: Array = []
 	for key in engine.turn_order:
 		if key is String:
-			order_names.append("DU")
+			order_names.append("YOU")
 		elif engine.enemies[int(key)]["hp"] > 0:
 			order_names.append(String(engine.enemies[int(key)]["name"]))
-	order_label.text = "Runda %d   Tur: %s" % [engine.round_number, " » ".join(order_names)]
+	order_label.text = "Round %d   Turn: %s" % [engine.round_number, " » ".join(order_names)]
 
 	for i in enemy_widgets.size():
 		var enemy: Dictionary = engine.enemies[i]
@@ -176,7 +176,7 @@ func _refresh(animate: bool) -> void:
 		button.modulate = Color(1, 1, 1, 0.35) if dead else Color.WHITE
 		var mark := "» " if i == selected_target and not dead else ""
 		var phase_mark := (
-			"  [FAS 2]" if enemy.get("is_boss", false) and int(enemy.get("phase", 1)) == 2 else ""
+			"  [PHASE 2]" if enemy.get("is_boss", false) and int(enemy.get("phase", 1)) == 2 else ""
 		)
 		widget["name_label"].text = "%s%s%s" % [mark, enemy["name"], phase_mark]
 		_set_bar(widget["hp_bar"], int(enemy["hp"]), int(enemy["max_hp"]), animate)
@@ -203,7 +203,7 @@ func _refresh(animate: bool) -> void:
 		)
 		var text: String = "%s%s" % [ability["name"], cost_text]
 		if cooldown > 0:
-			text += "\nladdar: %d turer" % cooldown
+			text += "\nrecharge: %d turns" % cooldown
 		button.text = text
 		button.disabled = (
 			cooldown > 0
@@ -283,17 +283,17 @@ func _status_text(unit: Dictionary) -> String:
 	for status in unit["statuses"]:
 		match String(status["id"]):
 			"poison":
-				parts.append("gift")
+				parts.append("poison")
 			"stun":
-				parts.append("bedövad")
+				parts.append("stunned")
 			"shield":
-				parts.append("sköld %d" % int(status.get("amount", 0)))
+				parts.append("shield %d" % int(status.get("amount", 0)))
 			"atk_up":
 				parts.append("atk+")
 			"slow":
-				parts.append("seg")
+				parts.append("slow")
 			"evade":
-				parts.append("undvik")
+				parts.append("evade")
 	return " ".join(parts)
 
 
@@ -305,11 +305,11 @@ func _show_end_panel() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 10)
 	if is_victory:
-		box.add_child(UIKit.title("SEGER", 28))
+		box.add_child(UIKit.title("VICTORY", 28))
 		box.add_child(
 			UIKit.body(
 				(
-					"+%d Essens   +%d XP"
+					"+%d Essence   +%d XP"
 					% [int(victory_rewards.get("essence", 0)), int(victory_rewards.get("xp", 0))]
 				),
 				19
@@ -322,7 +322,7 @@ func _show_end_panel() -> void:
 				"font_color", UIKit.RARITY_COLORS.get(loot.get("rarity", "common"), Color.WHITE)
 			)
 			box.add_child(loot_label)
-			var equip_button := UIKit.big_button("Utrusta", 64)
+			var equip_button := UIKit.big_button("Equip", 64)
 			equip_button.pressed.connect(
 				func():
 					Game.run.equip_item(Game.character, loot)
@@ -331,23 +331,20 @@ func _show_end_panel() -> void:
 					_show_end_panel()
 			)
 			box.add_child(equip_button)
-		var continue_button := UIKit.primary_button("Fortsätt", 88)
+		var continue_button := UIKit.primary_button("Continue", 88)
 		continue_button.pressed.connect(func(): main.after_room_cleared(victory_rewards))
 		box.add_child(continue_button)
 		# Onboarding-popup 2/3 (US-9.1): Essens-regeln.
 		if Game.should_show_tutorial("essence_intro"):
 			Game.mark_tutorial_seen("essence_intro")
-			(
-				UIKit
-				. popup(
-					self,
-					"Essens",
-					"Essens du samlar är OSÄKRAD tills du stannar vid en checkpoint. Dör du tappar du allt du bär – men högen går att hämta igen."
-				)
+			var essence_hint := (
+				"Essence you gather is UNBANKED until you stay at a checkpoint. "
+				+ "If you die you drop everything you carry – but the pile can be reclaimed."
 			)
+			UIKit.popup(self, "Essence", essence_hint)
 	else:
-		box.add_child(UIKit.title("DU FÖLL", 28))
-		var death_button := UIKit.big_button("Fortsätt", 88)
+		box.add_child(UIKit.title("YOU FELL", 28))
+		var death_button := UIKit.big_button("Continue", 88)
 		death_button.pressed.connect(main.player_died)
 		box.add_child(death_button)
 	panel.add_child(box)

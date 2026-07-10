@@ -4,16 +4,16 @@ class_name Items
 ## omedelbart vid upphämtning – att tappa dem vore för hårt.
 
 const RARITIES := ["common", "rare", "epic"]
-const RARITY_LABELS := {"common": "Vanlig", "rare": "Sällsynt", "epic": "Episk"}
+const RARITY_LABELS := {"common": "Common", "rare": "Rare", "epic": "Epic"}
 const RARITY_STAT_MULT := {"common": 1.0, "rare": 1.6, "epic": 2.5}
 
 const BASES := [
-	{"slot": "weapon", "name": "Svärd", "stat": "attack", "base": 3},
-	{"slot": "weapon", "name": "Stav", "stat": "magic", "base": 3},
-	{"slot": "weapon", "name": "Dolk", "stat": "attack", "base": 2, "extra": {"speed": 1}},
-	{"slot": "armor", "name": "Läderharnesk", "stat": "armor", "base": 1, "extra": {"max_hp": 6}},
-	{"slot": "armor", "name": "Ringbrynja", "stat": "armor", "base": 2},
-	{"slot": "trinket", "name": "Amulett", "stat": "max_mana", "base": 3},
+	{"slot": "weapon", "name": "Sword", "stat": "attack", "base": 3},
+	{"slot": "weapon", "name": "Staff", "stat": "magic", "base": 3},
+	{"slot": "weapon", "name": "Dagger", "stat": "attack", "base": 2, "extra": {"speed": 1}},
+	{"slot": "armor", "name": "Leather Armor", "stat": "armor", "base": 1, "extra": {"max_hp": 6}},
+	{"slot": "armor", "name": "Chainmail", "stat": "armor", "base": 2},
+	{"slot": "trinket", "name": "Amulet", "stat": "max_mana", "base": 3},
 	{"slot": "trinket", "name": "Ring", "stat": "max_hp", "base": 8},
 ]
 
@@ -70,11 +70,11 @@ static func stat_label(stat: String) -> String:
 		"attack":
 			return "attack"
 		"magic":
-			return "magi"
+			return "magic"
 		"speed":
-			return "fart"
+			return "speed"
 		"armor":
-			return "rustning"
+			return "armor"
 		"max_mana":
 			return "mana"
 	return stat

@@ -8,7 +8,7 @@ class_name Upgrades
 const PERMANENT := {
 	"vitality":
 	{
-		"name": "Vitalitet",
+		"name": "Vitality",
 		"desc": "+10 max HP per rank",
 		"stat": "max_hp",
 		"per_rank": 10,
@@ -17,7 +17,7 @@ const PERMANENT := {
 	},
 	"strength":
 	{
-		"name": "Styrka",
+		"name": "Strength",
 		"desc": "+2 attack per rank",
 		"stat": "attack",
 		"per_rank": 2,
@@ -26,8 +26,8 @@ const PERMANENT := {
 	},
 	"wisdom":
 	{
-		"name": "Visdom",
-		"desc": "+2 magi per rank",
+		"name": "Wisdom",
+		"desc": "+2 magic per rank",
 		"stat": "magic",
 		"per_rank": 2,
 		"base_cost": 60,
@@ -35,7 +35,7 @@ const PERMANENT := {
 	},
 	"clarity":
 	{
-		"name": "Klarhet",
+		"name": "Clarity",
 		"desc": "+4 max mana per rank",
 		"stat": "max_mana",
 		"per_rank": 4,
@@ -44,8 +44,8 @@ const PERMANENT := {
 	},
 	"toughness":
 	{
-		"name": "Seghet",
-		"desc": "+1 rustning per rank",
+		"name": "Toughness",
+		"desc": "+1 armor per rank",
 		"stat": "armor",
 		"per_rank": 1,
 		"base_cost": 80,
@@ -53,8 +53,8 @@ const PERMANENT := {
 	},
 	"essence_catcher":
 	{
-		"name": "Essensfångare",
-		"desc": "+10% Essens per rank",
+		"name": "Essence Catcher",
+		"desc": "+10% Essence per rank",
 		"essence_bonus": 0.10,
 		"base_cost": 70,
 		"max_rank": 5,
@@ -65,29 +65,29 @@ const PERMANENT := {
 const TEMPORARY := {
 	"battle_luck":
 	{
-		"name": "Krigslycka",
-		"desc": "+25% skada under runnen",
+		"name": "Battle Luck",
+		"desc": "+25% damage this run",
 		"cost": 40,
 		"effect": {"damage_mult": 1.25},
 	},
 	"lucky_amulet":
 	{
-		"name": "Lyckoamulett",
-		"desc": "Bättre chans till sällsynt loot",
+		"name": "Lucky Amulet",
+		"desc": "Better odds of rare loot",
 		"cost": 35,
 		"effect": {"bonus_rarity": true},
 	},
 	"essence_rush":
 	{
-		"name": "Essensrus",
-		"desc": "+50% Essens under runnen",
+		"name": "Essence Rush",
+		"desc": "+50% Essence this run",
 		"cost": 45,
 		"effect": {"essence_mult": 1.5},
 	},
 	"blessing":
 	{
-		"name": "Välsignelse",
-		"desc": "+20 max HP under runnen",
+		"name": "Blessing",
+		"desc": "+20 max HP this run",
 		"cost": 30,
 		"effect": {"start_hp_bonus": 20},
 	},

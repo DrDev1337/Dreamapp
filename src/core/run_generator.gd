@@ -54,9 +54,9 @@ static func _roll_enemies(rng: RandomNumberGenerator, depth: int) -> Array:
 static func room_label(room: Dictionary) -> String:
 	match String(room["type"]):
 		"combat":
-			return "Strid"
+			return "Battle"
 		"chest":
-			return "Skattkammare"
+			return "Treasure"
 		"miniboss":
 			return "Miniboss"
 		"boss":

@@ -19,13 +19,15 @@ func build() -> void:
 	header.add_child(Icons.image(Icons.CAMPFIRE, 42, UIKit.COLOR_WARN))
 	header.add_child(UIKit.title("CHECKPOINT", 36))
 	layout.add_child(header)
-	layout.add_child(UIKit.body("Djup %d. Du helas till full styrka." % run.current_depth, 18))
+	layout.add_child(
+		UIKit.body("Depth %d. You are healed to full strength." % run.current_depth, 18)
+	)
 
 	var essence_panel := UIKit.panel()
-	var essence_label := UIKit.body("Buren Essens: %d" % run.carried_essence, 26)
+	var essence_label := UIKit.body("Carried Essence: %d" % run.carried_essence, 26)
 	essence_label.add_theme_color_override("font_color", UIKit.COLOR_ESSENCE)
 	if not run.unsecured_items.is_empty():
-		essence_label.text += "   ·   Osäkrad loot: %d föremål" % run.unsecured_items.size()
+		essence_label.text += "   ·   Unbanked loot: %d items" % run.unsecured_items.size()
 	essence_panel.add_child(Icons.labeled(Icons.ESSENCE, essence_label, 36, UIKit.COLOR_ESSENCE))
 	layout.add_child(essence_panel)
 
@@ -36,7 +38,7 @@ func build() -> void:
 			UIKit
 			. body(
 				(
-					"OBS! Du har fortfarande en obärgad Essens-hög (%d) på djup %d. Dör du ersätts den och försvinner för alltid!"
+					"Warning! You still have an unclaimed Essence pile (%d) at depth %d. Die again and it is replaced – lost forever!"
 					% [
 						int(character.death_pile.get("essence", 0)),
 						int(character.death_pile.get("depth", 1))
@@ -53,12 +55,12 @@ func build() -> void:
 	filler.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	layout.add_child(filler)
 
-	var shop_button := UIKit.big_button("Handla för buren Essens", 80)
+	var shop_button := UIKit.big_button("Spend carried Essence", 80)
 	shop_button.pressed.connect(func(): main.show_shop("checkpoint"))
 	layout.add_child(shop_button)
 
 	var stay_button := UIKit.primary_button(
-		"STANNA – säkra %d Essens och avsluta" % run.carried_essence, 104
+		"STAY – bank %d Essence and end the run" % run.carried_essence, 104
 	)
 	stay_button.pressed.connect(
 		func():
@@ -70,11 +72,11 @@ func build() -> void:
 	# US-1.3: djupare segment kräver nivå – tydlig indikation.
 	var lock_reason := run.deeper_lock_reason(character)
 	if lock_reason != "":
-		var lock_label := UIKit.body("Låst: " + lock_reason, 17)
+		var lock_label := UIKit.body("Locked: " + lock_reason, 17)
 		lock_label.add_theme_color_override("font_color", UIKit.COLOR_WARN)
 		layout.add_child(lock_label)
 	else:
-		var deeper_button := UIKit.primary_button("FORTSÄTT DJUPARE – riskera allt", 104)
+		var deeper_button := UIKit.primary_button("GO DEEPER – risk it all", 104)
 		deeper_button.pressed.connect(
 			func():
 				Game.save_game()
@@ -90,6 +92,6 @@ func build() -> void:
 			. popup(
 				self,
 				"Checkpoint",
-				"Här väljer du: stanna och säkra allt du bär – eller fortsätt djupare där belöningarna är större men allt osäkrat riskeras."
+				"Here you choose: stay and bank everything you carry – or push deeper where rewards are greater but everything unbanked is at risk."
 			)
 		)

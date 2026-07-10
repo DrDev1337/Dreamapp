@@ -2,7 +2,7 @@ class_name CharacterState
 ## Persistent karaktärsdata (US-4.x). Ren data + regler, ingen UI.
 ## Serialiseras med to_dict/from_dict för save-systemet (US-11.2).
 
-var character_name := "Namnlös"
+var character_name := "Nameless"
 var level := 1
 var xp := 0
 var class_axis_points := {"fighter": 0, "mage": 0, "rogue": 0}
@@ -123,7 +123,7 @@ func to_dict() -> Dictionary:
 
 static func from_dict(data: Dictionary) -> CharacterState:
 	var c := CharacterState.new()
-	c.character_name = data.get("character_name", "Namnlös")
+	c.character_name = data.get("character_name", "Nameless")
 	c.level = int(data.get("level", 1))
 	c.xp = int(data.get("xp", 0))
 	c.class_axis_points = data.get("class_axis_points", {"fighter": 0, "mage": 0, "rogue": 0})

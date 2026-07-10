@@ -48,7 +48,7 @@ func setup(player_data: Dictionary, enemy_list: Array, seed_value: int) -> void:
 	rng.seed = seed_value
 	round_number = 1
 	_build_turn_order()
-	log.append("Strid! %d fiender står i din väg." % enemies.size())
+	log.append("Battle! %d enemies stand in your way." % enemies.size())
 
 
 func is_over() -> bool:
@@ -95,7 +95,7 @@ func advance_until_player_turn() -> void:
 			continue
 		var key = turn_order[turn_index]
 		if key is String and key == "player":
-			if _tick_statuses_and_check(player, "Du"):
+			if _tick_statuses_and_check(player, "You"):
 				awaiting_player = true
 				return
 			# Spelaren var bedövad eller dog av statuseffekt.
@@ -156,7 +156,7 @@ func _execute_ability(
 	if kind == "buff":
 		var status: Dictionary = ability["status"].duplicate()
 		user["statuses"].append(status)
-		log.append("%s använder %s." % [_unit_name(user, is_player), ability["name"]])
+		log.append("%s uses %s." % [_unit_name(user, is_player), ability["name"]])
 		return
 	var targets: Array = []
 	if ability["target"] == "all_enemies":
@@ -203,7 +203,7 @@ func _deal_damage(target: Dictionary, amount: int, target_name: String) -> void:
 	for i in target["statuses"].size():
 		if target["statuses"][i]["id"] == "evade":
 			target["statuses"].remove_at(i)
-			log.append("%s undviker attacken!" % target_name)
+			log.append("%s evades the attack!" % target_name)
 			return
 	# Sköld absorberar först.
 	for status in target["statuses"]:
@@ -212,16 +212,16 @@ func _deal_damage(target: Dictionary, amount: int, target_name: String) -> void:
 			status["amount"] = int(status["amount"]) - absorbed
 			amount -= absorbed
 			if absorbed > 0:
-				log.append("Skölden absorberar %d skada." % absorbed)
+				log.append("The shield absorbs %d damage." % absorbed)
 	if target.get("guard_next", false):
 		amount = int(amount / 2.0)
 		target["guard_next"] = false
 	if amount > 0:
 		target["hp"] = int(target["hp"]) - amount
-		log.append("%s tar %d skada." % [target_name, amount])
+		log.append("%s takes %d damage." % [target_name, amount])
 	if target["hp"] <= 0:
 		target["hp"] = 0
-		log.append("%s besegras!" % target_name)
+		log.append("%s is defeated!" % target_name)
 
 
 ## Tickar statuseffekter vid turstart. Returnerar false om turen ska hoppa över (stun).
@@ -232,10 +232,10 @@ func _tick_statuses_and_check(unit: Dictionary, unit_name: String) -> bool:
 		match status["id"]:
 			"poison":
 				unit["hp"] = int(unit["hp"]) - int(status["amount"])
-				log.append("%s tar %d giftskada." % [unit_name, int(status["amount"])])
+				log.append("%s takes %d poison damage." % [unit_name, int(status["amount"])])
 			"stun":
 				stunned = true
-				log.append("%s är bedövad och missar sin tur." % unit_name)
+				log.append("%s is stunned and misses a turn." % unit_name)
 		status["duration"] = int(status["duration"]) - 1
 		if (
 			int(status["duration"]) > 0
@@ -245,7 +245,7 @@ func _tick_statuses_and_check(unit: Dictionary, unit_name: String) -> bool:
 	unit["statuses"] = remaining
 	if unit["hp"] <= 0:
 		unit["hp"] = 0
-		log.append("%s dukar under." % unit_name)
+		log.append("%s succumbs." % unit_name)
 		return false
 	return not stunned
 
@@ -255,39 +255,39 @@ func _enemy_act(enemy: Dictionary) -> void:
 	if enemy.get("is_boss", false) and enemy["phase"] == 1 and enemy["hp"] <= enemy["max_hp"] / 2:
 		enemy["phase"] = 2
 		enemy["attack"] = int(enemy["attack"] * 1.4)
-		log.append("%s vrålar – fas 2! Attacken ökar." % enemy["name"])
+		log.append("%s roars – phase 2! Its attacks grow stronger." % enemy["name"])
 	match enemy["behavior"]:
 		"healer":
 			var wounded := _most_wounded_ally()
 			if not wounded.is_empty() and wounded["hp"] < wounded["max_hp"] * 0.7:
 				var heal := int(enemy.get("heal_power", 6))
 				wounded["hp"] = mini(int(wounded["max_hp"]), int(wounded["hp"]) + heal)
-				log.append("%s helar %s med %d HP." % [enemy["name"], wounded["name"], heal])
+				log.append("%s heals %s for %d HP." % [enemy["name"], wounded["name"], heal])
 			else:
 				_enemy_attack(enemy, 1.0)
 		"tank":
 			if round_number % 2 == 0:
 				enemy["guard_next"] = true
-				log.append("%s går i försvarsställning." % enemy["name"])
+				log.append("%s takes a defensive stance." % enemy["name"])
 			else:
 				_enemy_attack(enemy, 1.0)
 		"berserker":
 			var mult := 2.0 if enemy["hp"] < enemy["max_hp"] * 0.5 else 1.0
 			if mult > 1.0:
-				log.append("%s rasar!" % enemy["name"])
+				log.append("%s rages!" % enemy["name"])
 			_enemy_attack(enemy, mult)
 		"ranged":
 			_enemy_attack(enemy, 1.0, true)
 		"miniboss":
 			# Vart tredje varv: tungt slag.
 			if round_number % 3 == 0:
-				log.append("%s höjer sin gravhacka..." % enemy["name"])
+				log.append("%s raises its grave pick..." % enemy["name"])
 				_enemy_attack(enemy, 1.8)
 			else:
 				_enemy_attack(enemy, 1.0)
 		"boss":
 			if enemy["phase"] == 2 and round_number % 2 == 0:
-				log.append("%s slår i vansinne – två attacker!" % enemy["name"])
+				log.append("%s lashes out in frenzy – two attacks!" % enemy["name"])
 				_enemy_attack(enemy, 0.9)
 				if player["hp"] > 0:
 					_enemy_attack(enemy, 0.9)
@@ -305,8 +305,8 @@ func _enemy_attack(enemy: Dictionary, mult: float, ignore_half_armor := false) -
 	base -= armor
 	base *= rng.randf_range(0.9, 1.1)
 	var damage := maxi(Balance.MIN_DAMAGE, int(base))
-	log.append("%s attackerar dig." % enemy["name"])
-	_deal_damage(player, damage, "Du")
+	log.append("%s attacks you." % enemy["name"])
+	_deal_damage(player, damage, "You")
 
 
 func _most_wounded_ally() -> Dictionary:
@@ -322,16 +322,16 @@ func _most_wounded_ally() -> Dictionary:
 
 
 func _unit_name(unit: Dictionary, is_player: bool) -> String:
-	return "Du" if is_player else String(unit["name"])
+	return "You" if is_player else String(unit["name"])
 
 
 func _end_combat(outcome: String) -> void:
 	result = outcome
 	awaiting_player = false
 	if outcome == "victory":
-		log.append("Striden är vunnen!")
+		log.append("Victory!")
 	else:
-		log.append("Du har fallit...")
+		log.append("You have fallen...")
 
 
 ## Total Essens och XP från besegrade fiender.

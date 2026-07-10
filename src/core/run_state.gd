@@ -59,7 +59,7 @@ func deeper_lock_reason(character: CharacterState) -> String:
 		return ""
 	var required := Balance.required_level_for_depth(current_depth + 1)
 	if character.level < required:
-		return "Djupare ner krävs nivå %d (du är nivå %d)." % [required, character.level]
+		return "Level %d required to go deeper (you are level %d)." % [required, character.level]
 	return ""
 
 
