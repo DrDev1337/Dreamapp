@@ -117,7 +117,14 @@ func show_victory(banked: int) -> void:
 func resume_or_hub() -> void:
 	if Game.has_active_run():
 		var run: RunState = Game.run
-		if run.combat != null and not run.combat.is_over():
+		if run.combat != null and run.combat.is_over():
+			# Appen stängdes på slutskärmen: förlust ger döden dess pris,
+			# vunnen strid utan uthämtade rewards släpps vidare till kartan.
+			if run.combat.result == "defeat":
+				player_died()
+				return
+			run.combat = null
+		if run.combat != null:
 			show_combat()
 		elif run.at_checkpoint():
 			show_checkpoint()

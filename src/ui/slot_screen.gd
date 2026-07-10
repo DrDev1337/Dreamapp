@@ -46,6 +46,9 @@ func _build_slot_list() -> void:
 	layout.add_theme_constant_override("separation", 16)
 	add_child(UIKit.vmargin(layout))
 	layout.add_child(UIKit.spacer(40))
+	var crystal := Icons.image(Icons.ESSENCE, 72, UIKit.COLOR_ESSENCE)
+	crystal.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	layout.add_child(crystal)
 	var game_title := UIKit.title("ESSENS", 56)
 	game_title.add_theme_color_override("font_color", Color("cfc4f5"))
 	game_title.add_theme_color_override(

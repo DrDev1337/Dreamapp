@@ -1,0 +1,12 @@
+Ikonerna i den här katalogen kommer från game-icons.net och är
+licensierade under Creative Commons BY 3.0:
+https://creativecommons.org/licenses/by/3.0/
+
+Skapare (via game-icons.net): Lorc, Delapouite, Skoll, Caro Asercion
+m.fl. – se https://game-icons.net för fullständig attribution per ikon.
+
+Ikonerna är extraherade som SVG (vit fill för tintning i spelet) via
+react-icons-paketet (MIT, https://github.com/react-icons/react-icons),
+som bäddar in game-icons-biblioteket.
+
+Attribution ska följa med i spelets credits-skärm vid release.

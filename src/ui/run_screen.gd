@@ -31,24 +31,23 @@ func build() -> void:
 	)
 	layout.add_child(hp_label)
 
-	# Kartan: en rad per rum (US-7.1). Dödshögen markeras på sin rad (US-2.4).
+	# Kartan: en rad per rum med rumsikon (US-7.1). Dödshögen markeras
+	# med dödskalle på sin rad (US-2.4).
 	var map_panel := UIKit.panel()
 	var map_box := VBoxContainer.new()
+	map_box.add_theme_constant_override("separation", 6)
 	for room in run.rooms:
 		var depth := int(room["depth"])
-		var marker := (
-			"» "
-			if depth == run.current_depth + 1
-			else ("· " if depth <= run.current_depth else "   ")
-		)
+		var marker := "» " if depth == run.current_depth + 1 else ""
 		var pile_mark := (
-			"  (din Essens!)" if room.get("has_pile", false) and character.has_death_pile() else ""
+			"  + din Essens!" if room.get("has_pile", false) and character.has_death_pile() else ""
 		)
 		var checkpoint_mark := "  · checkpoint efter" if room.get("checkpoint_after", false) else ""
 		var lock_mark := ""
-		if character.level < Balance.required_level_for_depth(depth):
+		var locked: bool = character.level < Balance.required_level_for_depth(depth)
+		if locked:
 			lock_mark = "  låst: nivå %d" % Balance.required_level_for_depth(depth)
-		var row := UIKit.body(
+		var text_label := UIKit.body(
 			(
 				"%sDjup %d – %s%s%s%s"
 				% [
@@ -62,8 +61,17 @@ func build() -> void:
 			),
 			17
 		)
+		var icon_texture: Texture2D = Icons.ROOM.get(String(room["type"]), Icons.STAIRS)
+		var tint := Color(1, 1, 1, 0.85)
+		if room.get("has_pile", false) and character.has_death_pile():
+			icon_texture = Icons.SKULL
+			tint = UIKit.COLOR_WARN
+		elif locked:
+			icon_texture = Icons.LOCK
+			tint = Color(1, 1, 1, 0.4)
+		var row := Icons.labeled(icon_texture, text_label, 24, tint)
 		if depth <= run.current_depth:
-			row.add_theme_color_override("font_color", Color(1, 1, 1, 0.4))
+			row.modulate = Color(1, 1, 1, 0.4)
 		map_box.add_child(row)
 	map_panel.add_child(map_box)
 	layout.add_child(map_panel)

@@ -32,6 +32,9 @@ func build() -> void:
 	)
 	for choice in choices:
 		var button := UIKit.big_button("%s\n%s" % [choice["label"], choice["desc"]], 110)
+		button.icon = Icons.CLASS_EMBLEM.get(choice["axis"], null)
+		button.add_theme_constant_override("icon_max_width", 40)
+		button.add_theme_color_override("icon_normal_color", UIKit.COLOR_ACCENT)
 		button.pressed.connect(func(): _pick(choice, remaining))
 		layout.add_child(button)
 

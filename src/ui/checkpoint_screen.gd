@@ -13,17 +13,20 @@ func build() -> void:
 	layout.add_theme_constant_override("separation", 14)
 	add_child(UIKit.vmargin(layout))
 
-	layout.add_child(UIKit.title("CHECKPOINT", 36))
+	var header := HBoxContainer.new()
+	header.alignment = BoxContainer.ALIGNMENT_CENTER
+	header.add_theme_constant_override("separation", 12)
+	header.add_child(Icons.image(Icons.CAMPFIRE, 42, UIKit.COLOR_WARN))
+	header.add_child(UIKit.title("CHECKPOINT", 36))
+	layout.add_child(header)
 	layout.add_child(UIKit.body("Djup %d. Du helas till full styrka." % run.current_depth, 18))
 
 	var essence_panel := UIKit.panel()
 	var essence_label := UIKit.body("Buren Essens: %d" % run.carried_essence, 26)
 	essence_label.add_theme_color_override("font_color", UIKit.COLOR_ESSENCE)
-	essence_panel.add_child(essence_label)
 	if not run.unsecured_items.is_empty():
-		essence_panel.get_child(0).text += (
-			"   ·   Osäkrad loot: %d föremål" % run.unsecured_items.size()
-		)
+		essence_label.text += "   ·   Osäkrad loot: %d föremål" % run.unsecured_items.size()
+	essence_panel.add_child(Icons.labeled(Icons.ESSENCE, essence_label, 36, UIKit.COLOR_ESSENCE))
 	layout.add_child(essence_panel)
 
 	# US-2.5: varning om en obärgad hög är i fara.

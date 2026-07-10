@@ -9,7 +9,10 @@ func build() -> void:
 	layout.add_theme_constant_override("separation", 16)
 	add_child(UIKit.vmargin(layout))
 
-	layout.add_child(UIKit.spacer(60))
+	layout.add_child(UIKit.spacer(50))
+	var skull := Icons.image(Icons.SKULL, 80, Color("d8b0b0"))
+	skull.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	layout.add_child(skull)
 	layout.add_child(UIKit.title("DU FÖLL", 44))
 	layout.add_child(UIKit.body("Djupet krävde sitt.", 18))
 	layout.add_child(UIKit.spacer(20))

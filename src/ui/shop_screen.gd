@@ -12,7 +12,12 @@ func build() -> void:
 	layout.add_theme_constant_override("separation", 12)
 	add_child(UIKit.vmargin(layout))
 
-	layout.add_child(UIKit.title("Uppgraderingar", 32))
+	var header := HBoxContainer.new()
+	header.alignment = BoxContainer.ALIGNMENT_CENTER
+	header.add_theme_constant_override("separation", 12)
+	header.add_child(Icons.image(Icons.ANVIL, 38, UIKit.COLOR_ACCENT))
+	header.add_child(UIKit.title("Uppgraderingar", 32))
+	layout.add_child(header)
 	layout.add_child(_currency_label())
 
 	var tabs := TabContainer.new()

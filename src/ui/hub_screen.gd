@@ -11,7 +11,18 @@ func build() -> void:
 	add_child(UIKit.vmargin(layout))
 
 	var class_label: String = LevelUp.AXIS_LABELS.get(character.class_identity, "Oklassad")
-	layout.add_child(UIKit.title("%s" % character.character_name, 38))
+	# Klassemblem bredvid namnet när en klass är låst.
+	if character.class_identity != "":
+		var emblem_row := HBoxContainer.new()
+		emblem_row.alignment = BoxContainer.ALIGNMENT_CENTER
+		emblem_row.add_theme_constant_override("separation", 12)
+		emblem_row.add_child(
+			Icons.image(Icons.CLASS_EMBLEM[character.class_identity], 40, UIKit.COLOR_ACCENT)
+		)
+		emblem_row.add_child(UIKit.title("%s" % character.character_name, 38))
+		layout.add_child(emblem_row)
+	else:
+		layout.add_child(UIKit.title("%s" % character.character_name, 38))
 	layout.add_child(UIKit.divider())
 	layout.add_child(
 		UIKit.body(
@@ -26,7 +37,7 @@ func build() -> void:
 	var essence_panel := UIKit.panel()
 	var essence_label := UIKit.body("Bankad Essens: %d" % character.banked_essence, 24)
 	essence_label.add_theme_color_override("font_color", UIKit.COLOR_ESSENCE)
-	essence_panel.add_child(essence_label)
+	essence_panel.add_child(Icons.labeled(Icons.ESSENCE, essence_label, 34, UIKit.COLOR_ESSENCE))
 	layout.add_child(essence_panel)
 
 	# US-2.4: tydlig indikator på var din tappade Essens ligger.
@@ -44,7 +55,7 @@ func build() -> void:
 			)
 		)
 		pile_label.add_theme_color_override("font_color", UIKit.COLOR_WARN)
-		pile_panel.add_child(pile_label)
+		pile_panel.add_child(Icons.labeled(Icons.SKULL, pile_label, 34, UIKit.COLOR_WARN))
 		layout.add_child(pile_panel)
 
 	# Statvy + utrustning (US-8.1: karaktärsvy).

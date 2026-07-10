@@ -10,7 +10,10 @@ func build() -> void:
 	layout.add_theme_constant_override("separation", 16)
 	add_child(UIKit.vmargin(layout))
 
-	layout.add_child(UIKit.spacer(60))
+	layout.add_child(UIKit.spacer(50))
+	var crystal := Icons.image(Icons.ESSENCE, 80, UIKit.COLOR_ESSENCE)
+	crystal.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	layout.add_child(crystal)
 	layout.add_child(UIKit.title("RUN AVSLUTAD", 40))
 	layout.add_child(UIKit.spacer(20))
 
