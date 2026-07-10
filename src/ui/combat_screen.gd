@@ -29,6 +29,10 @@ func build() -> void:
 	if engine == null:
 		main.show_run.call_deferred()
 		return
+	# Skyddsnät (även för äldre sparfiler): se till att striden står på
+	# spelarens tur innan knapparna bedöms.
+	if not engine.is_over() and not engine.awaiting_player:
+		engine.advance_until_player_turn()
 	_build_structure()
 	_refresh(false)
 	if engine.is_over():

@@ -96,6 +96,9 @@ func enter_next_room(character: CharacterState) -> Dictionary:
 				enemy_list.append(Enemies.spawn(id, current_depth))
 			combat = CombatEngine.new()
 			combat.setup(player_combat, enemy_list, rng.randi())
+			# Kör fram till spelarens tur (snabbare fiender agerar först) –
+			# utan detta är awaiting_player false och inga knappar fungerar.
+			combat.advance_until_player_turn()
 			event["combat_started"] = true
 	return event
 

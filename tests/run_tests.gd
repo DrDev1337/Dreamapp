@@ -242,7 +242,9 @@ func test_serialization() -> void:
 	var run := RunState.start(character, 47)
 	var event := run.enter_next_room(character)
 	check(event["combat_started"], "rum 1 startar strid")
-	run.combat.advance_until_player_turn()
+	# Regression: spelflödet måste själv köra fram till spelarens tur –
+	# annars är awaiting_player false och inga knappar fungerar i UI:t.
+	check(run.combat.awaiting_player, "nytt rum står direkt på spelarens tur")
 	var json_payload := JSON.stringify(run.to_dict())
 	var parsed = JSON.parse_string(json_payload)
 	var resumed := RunState.from_dict(parsed)
