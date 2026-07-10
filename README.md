@@ -76,6 +76,6 @@ Alla MVP-user-stories har en implementation (spellogik + UI-flöde). Medvetet kv
 
 - **Art & juice**: allt är färgpaneler + text. Sprites, animationer, haptik, ljud, hit-stop.
 - **Riktig ads/IAP-SDK**: `src/autoload/ads.gd` är en stub med rätt anropspunkter.
-- **Fiende-intentioner (US-3.4, V2)**, förråd (US-5.3), fler biomer/bossar (US-1.4, US-6.3),
-  cloud save (US-11.3).
+- **Förråd (US-5.3)**, fler biomer/bossar (US-1.4, US-6.3), cloud save (US-11.3).
+  Fiende-intentioner (US-3.4) är implementerat.
 - **Balansering**: siffrorna i `balance.gd` är startvärden, inte speltestade.

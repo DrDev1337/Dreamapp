@@ -97,6 +97,7 @@ func advance_until_player_turn() -> void:
 		if key is String and key == "player":
 			if _tick_statuses_and_check(player, "You"):
 				awaiting_player = true
+				plan_intents()  # US-3.4: visa vad fienderna gör härnäst
 				return
 			# Spelaren var bedövad eller dog av statuseffekt.
 			if player["hp"] <= 0:
@@ -250,51 +251,110 @@ func _tick_statuses_and_check(unit: Dictionary, unit_name: String) -> bool:
 	return not stunned
 
 
+# --- Intentioner (US-3.4): fiendens nästa handling planeras när ---
+# --- spelaren står i tur, visas i UI och exekveras som utlovat.  ---
+
+
+## Planerar varje levande fiendes nästa handling. Kallas när spelaren
+## får turen. Intentionen lagras i fiendens dict och serialiseras
+## därmed automatiskt med striden.
+func plan_intents() -> void:
+	var player_pos := turn_order.find("player")
+	for i in enemies.size():
+		var enemy: Dictionary = enemies[i]
+		if enemy["hp"] <= 0:
+			enemy["intent"] = {}
+			continue
+		# Fiender efter spelaren i turordningen agerar denna runda,
+		# fiender före spelaren agerar först nästa runda.
+		var pos := turn_order.find(i)
+		var acting_round := round_number if (pos == -1 or pos > player_pos) else round_number + 1
+		enemy["intent"] = _decide_action(enemy, acting_round)
+
+
+## Bestämmer handling för en fiende i en given runda. Används både av
+## planeringen (förutsägelse) och som fallback vid själva turen.
+func _decide_action(enemy: Dictionary, acting_round: int) -> Dictionary:
+	for status in enemy["statuses"]:
+		if status["id"] == "stun":
+			return {"kind": "stunned", "label": "Stunned", "value": 0}
+	var special := _special_action(enemy, acting_round)
+	if not special.is_empty():
+		return special
+	var est := _estimate_damage(enemy, 1.0, enemy["behavior"] == "ranged")
+	return {"kind": "attack", "label": "Attack ~%d" % est, "value": est}
+
+
+## Beteendets specialhandling för rundan, eller tom dict för vanlig attack.
+func _special_action(enemy: Dictionary, acting_round: int) -> Dictionary:
+	match String(enemy["behavior"]):
+		"healer":
+			var wounded := _most_wounded_ally()
+			if not wounded.is_empty() and wounded["hp"] < wounded["max_hp"] * 0.7:
+				var heal := int(enemy.get("heal_power", 6))
+				return {"kind": "heal", "label": "Heal +%d" % heal, "value": heal}
+		"tank":
+			if acting_round % 2 == 0:
+				return {"kind": "guard", "label": "Guard", "value": 0}
+		"berserker":
+			if enemy["hp"] < enemy["max_hp"] * 0.5:
+				var frenzy_est := _estimate_damage(enemy, 2.0, false)
+				return {"kind": "frenzy", "label": "Frenzy ~%d" % frenzy_est, "value": frenzy_est}
+		"miniboss":
+			if acting_round % 3 == 0:
+				var heavy_est := _estimate_damage(enemy, 1.8, false)
+				return {"kind": "heavy", "label": "Heavy ~%d" % heavy_est, "value": heavy_est}
+		"boss":
+			if int(enemy.get("phase", 1)) == 2 and acting_round % 2 == 0:
+				var hit_est := _estimate_damage(enemy, 0.9, false)
+				return {"kind": "double", "label": "2 hits ~%d" % hit_est, "value": hit_est}
+	return {}
+
+
+## Förväntad skada utan slumpvariationen (för intentions-UI:t).
+func _estimate_damage(enemy: Dictionary, mult: float, ignore_half_armor: bool) -> int:
+	var armor := float(player.get("armor", 0))
+	if ignore_half_armor:
+		armor *= 0.5
+	return maxi(Balance.MIN_DAMAGE, int(float(enemy["attack"]) * mult - armor))
+
+
 func _enemy_act(enemy: Dictionary) -> void:
 	# US-6.1: bossen byter fas under 50% HP.
 	if enemy.get("is_boss", false) and enemy["phase"] == 1 and enemy["hp"] <= enemy["max_hp"] / 2:
 		enemy["phase"] = 2
 		enemy["attack"] = int(enemy["attack"] * 1.4)
 		log.append("%s roars – phase 2! Its attacks grow stronger." % enemy["name"])
-	match enemy["behavior"]:
-		"healer":
+	# Exekvera den utlovade intentionen; utan plan (äldre save) beslutas nu.
+	var intent: Dictionary = enemy.get("intent", {})
+	if intent.is_empty():
+		intent = _decide_action(enemy, round_number)
+	enemy["intent"] = {}
+	match String(intent.get("kind", "attack")):
+		"heal":
 			var wounded := _most_wounded_ally()
-			if not wounded.is_empty() and wounded["hp"] < wounded["max_hp"] * 0.7:
+			if not wounded.is_empty() and wounded["hp"] < wounded["max_hp"]:
 				var heal := int(enemy.get("heal_power", 6))
 				wounded["hp"] = mini(int(wounded["max_hp"]), int(wounded["hp"]) + heal)
 				log.append("%s heals %s for %d HP." % [enemy["name"], wounded["name"], heal])
 			else:
 				_enemy_attack(enemy, 1.0)
-		"tank":
-			if round_number % 2 == 0:
-				enemy["guard_next"] = true
-				log.append("%s takes a defensive stance." % enemy["name"])
-			else:
-				_enemy_attack(enemy, 1.0)
-		"berserker":
-			var mult := 2.0 if enemy["hp"] < enemy["max_hp"] * 0.5 else 1.0
-			if mult > 1.0:
-				log.append("%s rages!" % enemy["name"])
-			_enemy_attack(enemy, mult)
-		"ranged":
-			_enemy_attack(enemy, 1.0, true)
-		"miniboss":
-			# Vart tredje varv: tungt slag.
-			if round_number % 3 == 0:
-				log.append("%s raises its grave pick..." % enemy["name"])
-				_enemy_attack(enemy, 1.8)
-			else:
-				_enemy_attack(enemy, 1.0)
-		"boss":
-			if enemy["phase"] == 2 and round_number % 2 == 0:
-				log.append("%s lashes out in frenzy – two attacks!" % enemy["name"])
+		"guard":
+			enemy["guard_next"] = true
+			log.append("%s takes a defensive stance." % enemy["name"])
+		"frenzy":
+			log.append("%s rages!" % enemy["name"])
+			_enemy_attack(enemy, 2.0)
+		"heavy":
+			log.append("%s raises its grave pick..." % enemy["name"])
+			_enemy_attack(enemy, 1.8)
+		"double":
+			log.append("%s lashes out in frenzy – two attacks!" % enemy["name"])
+			_enemy_attack(enemy, 0.9)
+			if player["hp"] > 0:
 				_enemy_attack(enemy, 0.9)
-				if player["hp"] > 0:
-					_enemy_attack(enemy, 0.9)
-			else:
-				_enemy_attack(enemy, 1.0)
 		_:
-			_enemy_attack(enemy, 1.0)
+			_enemy_attack(enemy, 1.0, enemy["behavior"] == "ranged")
 
 
 func _enemy_attack(enemy: Dictionary, mult: float, ignore_half_armor := false) -> void:

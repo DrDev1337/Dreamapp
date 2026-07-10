@@ -106,11 +106,20 @@ func _make_enemy_widget(index: int) -> Dictionary:
 	var enemy: Dictionary = engine.enemies[index]
 	var button := Button.new()
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	button.custom_minimum_size = Vector2(0, 132)
+	button.custom_minimum_size = Vector2(0, 152)
 	var box := VBoxContainer.new()
 	box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
+	# Intentionen (US-3.4): "ikon ovanför fienden visar nästa handling".
+	var intent_row := HBoxContainer.new()
+	intent_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	intent_row.add_theme_constant_override("separation", 5)
+	var intent_icon := Icons.image(Icons.INTENT["attack"], 18)
+	intent_row.add_child(intent_icon)
+	var intent_label := UIKit.body("", 12)
+	intent_row.add_child(intent_label)
+	box.add_child(intent_row)
 	var icon_texture: Texture2D = Icons.ENEMY.get(enemy["id"], Icons.SKULL)
 	var tint: Color = Icons.ENEMY_TINT.get(enemy["id"], Color.WHITE)
 	var icon := Icons.image(icon_texture, 44, tint)
@@ -130,7 +139,15 @@ func _make_enemy_widget(index: int) -> Dictionary:
 			selected_target = index
 			_refresh(false)
 	)
-	return {"button": button, "name_label": name_label, "hp_bar": hp_bar, "info_label": info_label}
+	return {
+		"button": button,
+		"name_label": name_label,
+		"hp_bar": hp_bar,
+		"info_label": info_label,
+		"intent_row": intent_row,
+		"intent_icon": intent_icon,
+		"intent_label": intent_label,
+	}
 
 
 func _build_ability_grid() -> void:
@@ -183,6 +200,17 @@ func _refresh(animate: bool) -> void:
 		widget["info_label"].text = (
 			"%d/%d  %s" % [int(enemy["hp"]), int(enemy["max_hp"]), _status_text(enemy)]
 		)
+		# Intentionen (US-3.4).
+		var intent: Dictionary = enemy.get("intent", {})
+		var intent_kind := String(intent.get("kind", ""))
+		var show_intent := intent_kind != "" and not dead and not engine.is_over()
+		widget["intent_row"].visible = show_intent
+		if show_intent:
+			var tint: Color = Icons.INTENT_TINT.get(intent_kind, Color.WHITE)
+			widget["intent_icon"].texture = Icons.INTENT.get(intent_kind, Icons.INTENT["attack"])
+			widget["intent_icon"].modulate = tint
+			widget["intent_label"].text = String(intent.get("label", ""))
+			widget["intent_label"].add_theme_color_override("font_color", tint)
 
 	_set_bar(player_hp_bar, int(engine.player["hp"]), int(engine.player["max_hp"]), animate)
 	player_hp_label.text = "HP %d/%d" % [int(engine.player["hp"]), int(engine.player["max_hp"])]

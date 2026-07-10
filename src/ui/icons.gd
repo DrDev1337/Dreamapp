@@ -6,22 +6,46 @@ class_name Icons
 const _SWORD := preload("res://assets/icons/sword.svg")
 const _FIREBALL := preload("res://assets/icons/fireball.svg")
 const _GRAVEYARD := preload("res://assets/icons/graveyard.svg")
+const _FIST := preload("res://assets/icons/fist.svg")
+const _MAGIC_SHIELD := preload("res://assets/icons/magic_shield.svg")
+const _WAR_CRY := preload("res://assets/icons/war_cry.svg")
 
 const ABILITY := {
 	"basic_attack": _SWORD,
 	"focus_strike": preload("res://assets/icons/strike.svg"),
-	"power_strike": preload("res://assets/icons/fist.svg"),
+	"power_strike": _FIST,
 	"shield_bash": preload("res://assets/icons/shield_bash.svg"),
-	"war_cry": preload("res://assets/icons/war_cry.svg"),
+	"war_cry": _WAR_CRY,
 	"berserk": preload("res://assets/icons/berserk.svg"),
 	"firebolt": _FIREBALL,
 	"frost_nova": preload("res://assets/icons/frost.svg"),
-	"arcane_shield": preload("res://assets/icons/magic_shield.svg"),
+	"arcane_shield": _MAGIC_SHIELD,
 	"meteor": preload("res://assets/icons/meteor.svg"),
 	"backstab": preload("res://assets/icons/backstab.svg"),
 	"poison_blade": preload("res://assets/icons/poison.svg"),
 	"evasion": preload("res://assets/icons/dodge.svg"),
 	"shadow_dance": preload("res://assets/icons/shadow.svg"),
+}
+
+# Fiende-intentioner (US-3.4): ikon + färg per handlingstyp.
+const INTENT := {
+	"attack": _SWORD,
+	"heavy": _FIST,
+	"guard": _MAGIC_SHIELD,
+	"heal": preload("res://assets/icons/healing.svg"),
+	"frenzy": _WAR_CRY,
+	"double": preload("res://assets/icons/crossed_swords.svg"),
+	"stunned": preload("res://assets/icons/knockout.svg"),
+}
+
+const INTENT_TINT := {
+	"attack": Color("e08585"),
+	"heavy": Color("e05555"),
+	"guard": Color("7ea5e8"),
+	"heal": Color("6fdb8f"),
+	"frenzy": Color("e0a437"),
+	"double": Color("e05555"),
+	"stunned": Color("9a94a8"),
 }
 
 const ENEMY := {

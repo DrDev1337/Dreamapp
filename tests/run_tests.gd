@@ -19,6 +19,7 @@ func _init() -> void:
 	test_balance()
 	test_enemies()
 	test_combat_victory_and_defeat()
+	test_enemy_intents()
 	test_character_and_classing()
 	test_run_generation()
 	test_essence_death_and_recovery()
@@ -102,6 +103,29 @@ func test_combat_victory_and_defeat() -> void:
 			doomed.player_action("basic_attack", 0)
 		safety += 1
 	check(doomed.result == "defeat", "svag spelare besegras")
+
+
+func test_enemy_intents() -> void:
+	print("Intents (US-3.4)…")
+	var engine := CombatEngine.new()
+	engine.setup(
+		_make_player(), [Enemies.spawn("stone_golem", 1), Enemies.spawn("cultist_healer", 1)], 11
+	)
+	engine.advance_until_player_turn()
+	var golem_kind := String(engine.enemies[0].get("intent", {}).get("kind", ""))
+	check(golem_kind != "", "intentioner planeras när spelaren står i tur")
+	# Golem (fart 2, agerar efter spelaren i runda 1) attackerar udda rundor.
+	check(golem_kind == "attack", "tank attackerar udda rundor")
+	engine.round_number = 2
+	engine.plan_intents()
+	check(engine.enemies[0]["intent"]["kind"] == "guard", "tank planerar guard jämna rundor")
+	# Skadad allierad gör att healern planerar heal.
+	engine.enemies[0]["hp"] = int(engine.enemies[0]["max_hp"] * 0.3)
+	engine.plan_intents()
+	check(engine.enemies[1]["intent"]["kind"] == "heal", "healern planerar heal åt skadad allierad")
+	# Intentionen överlever serialisering (US-11.2).
+	var resumed := CombatEngine.from_dict(JSON.parse_string(JSON.stringify(engine.to_dict())))
+	check(String(resumed.enemies[1]["intent"]["kind"]) == "heal", "intentioner överlever resume")
 
 
 func test_character_and_classing() -> void:
