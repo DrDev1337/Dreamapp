@@ -34,6 +34,8 @@ jobs:
         run: godot --headless --import
       - name: Kör kärnlogik-testerna
         run: godot --headless -s tests/run_tests.gd
+      - name: Balanssimulering (100 runs)
+        run: godot --headless -s tools/simulate.gd
 
   build:
     name: Bygg webbexport
