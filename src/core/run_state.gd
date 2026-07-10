@@ -163,18 +163,24 @@ func bank_and_end(character: CharacterState) -> int:
 
 
 ## US-2.3 + US-2.5: vid död tappas allt till en hög; gammal hög ersätts.
+## En död utan något att tappa rör dock inte en befintlig hög – att
+## förlora sin gamla hög till en tom vore bara elakt.
 func on_death(character: CharacterState) -> Dictionary:
-	var lost_old_pile := character.has_death_pile() and not pile_recovered_this_run
-	# Osäkrad utrustning tas av och läggs i högen.
-	for item in unsecured_items:
-		var slot := String(item["slot"])
-		if character.equipment.get(slot, {}) == item:
-			character.equipment[slot] = {}
-	character.death_pile = {
-		"depth": current_depth,
-		"essence": carried_essence,
-		"loot": unsecured_items.duplicate(true),
-	}
+	var drops_something := carried_essence > 0 or not unsecured_items.is_empty()
+	var lost_old_pile := (
+		drops_something and character.has_death_pile() and not pile_recovered_this_run
+	)
+	if drops_something:
+		# Osäkrad utrustning tas av och läggs i högen.
+		for item in unsecured_items:
+			var slot := String(item["slot"])
+			if character.equipment.get(slot, {}) == item:
+				character.equipment[slot] = {}
+		character.death_pile = {
+			"depth": current_depth,
+			"essence": carried_essence,
+			"loot": unsecured_items.duplicate(true),
+		}
 	character.deaths += 1
 	var summary := {
 		"lost_essence": carried_essence,

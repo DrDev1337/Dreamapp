@@ -113,6 +113,30 @@ func build() -> void:
 		)
 		descend_button.pressed.connect(main.descend)
 		layout.add_child(descend_button)
+		# Frivillig sorti: räknas som en död (Essensen lämnas på djupet),
+		# så flykt aldrig är gratis men alltid möjlig.
+		var abandon_button := UIKit.big_button("Abandon run", 56)
+		abandon_button.add_theme_font_size_override("font_size", 18)
+		abandon_button.modulate = Color(1, 1, 1, 0.7)
+		abandon_button.pressed.connect(func(): _confirm_abandon(run))
+		layout.add_child(abandon_button)
+
+
+func _confirm_abandon(run: RunState) -> void:
+	var dialog := ConfirmationDialog.new()
+	dialog.title = "Abandon run?"
+	if run.carried_essence > 0 or not run.unsecured_items.is_empty():
+		dialog.dialog_text = (
+			"Abandoning counts as a death: your carried Essence (%d) and unbanked loot will be left at depth %d."
+			% [run.carried_essence, run.current_depth]
+		)
+	else:
+		dialog.dialog_text = "You carry nothing – the run simply ends."
+	dialog.ok_button_text = "Abandon"
+	dialog.cancel_button_text = "Keep going"
+	add_child(dialog)
+	dialog.popup_centered(Vector2i(560, 0))
+	dialog.confirmed.connect(main.abandon_run)
 
 
 func _chest_offer(item: Dictionary) -> Control:

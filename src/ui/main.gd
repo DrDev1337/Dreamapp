@@ -181,6 +181,14 @@ func player_died() -> void:
 	show_death(summary)
 
 
+## Frivilligt avbruten run: räknas som en död – buren Essens lämnas i
+## en hög på nuvarande djup, så mekaniken inte går att missbruka.
+func abandon_run() -> void:
+	var summary := Game.on_player_death()
+	summary["abandoned"] = true
+	show_death(summary)
+
+
 func return_to_hub_with_ad() -> void:
 	# US-10.1: interstitial endast mellan runs.
 	Ads.show_interstitial_between_runs()

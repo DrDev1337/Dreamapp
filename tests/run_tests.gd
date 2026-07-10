@@ -193,6 +193,13 @@ func test_essence_death_and_recovery() -> void:
 	check(summary2["replaced_old_pile"], "varning: gammal hög ersattes")
 	check(int(character.death_pile["essence"]) == 30, "bara senaste högen finns (US-2.5)")
 
+	# Att dö/överge utan något att tappa rör inte den befintliga högen.
+	var empty_run := RunState.start(character, 99)
+	empty_run.current_depth = 2
+	var empty_summary := empty_run.on_death(character)
+	check(int(character.death_pile["essence"]) == 30, "tom död skriver inte över högen")
+	check(not empty_summary["replaced_old_pile"], "tom död flaggar inte ersatt hög")
+
 	# Corpse run: nå djupet och få tillbaka allt (US-2.4).
 	var run3 := RunState.start(character, 44)
 	check(run3.rooms[0]["has_pile"], "högen markeras i nästa run (US-2.4)")
