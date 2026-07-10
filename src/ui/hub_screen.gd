@@ -12,6 +12,7 @@ func build() -> void:
 
 	var class_label: String = LevelUp.AXIS_LABELS.get(character.class_identity, "Oklassad")
 	layout.add_child(UIKit.title("%s" % character.character_name, 38))
+	layout.add_child(UIKit.divider())
 	layout.add_child(
 		UIKit.body(
 			(

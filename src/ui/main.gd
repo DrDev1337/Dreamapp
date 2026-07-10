@@ -23,11 +23,49 @@ var current_screen: Control = null
 
 func _ready() -> void:
 	theme = UIKit.build_theme()
-	var background := ColorRect.new()
-	background.color = UIKit.COLOR_BG
-	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(background)
+	_build_background()
 	show_slots()
+
+
+## Skiktad bakgrund helt utan bildfiler: grundfärg, ett svagt lila
+## ljussken uppifrån och en mörk vinjett i kanterna.
+func _build_background() -> void:
+	var base := ColorRect.new()
+	base.color = UIKit.COLOR_BG
+	base.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	base.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(base)
+
+	var glow := _gradient_layer(
+		Color(UIKit.COLOR_ACCENT.r, UIKit.COLOR_ACCENT.g, UIKit.COLOR_ACCENT.b, 0.14),
+		Color(UIKit.COLOR_ACCENT.r, UIKit.COLOR_ACCENT.g, UIKit.COLOR_ACCENT.b, 0.0),
+		Vector2(0.5, 0.1),
+		Vector2(0.5, 0.85)
+	)
+	add_child(glow)
+
+	var vignette := _gradient_layer(
+		Color(0, 0, 0, 0.0), Color(0, 0, 0, 0.5), Vector2(0.5, 0.45), Vector2(0.5, 1.25)
+	)
+	add_child(vignette)
+
+
+func _gradient_layer(inner: Color, outer: Color, from: Vector2, to: Vector2) -> TextureRect:
+	var gradient := Gradient.new()
+	gradient.colors = PackedColorArray([inner, outer])
+	gradient.offsets = PackedFloat32Array([0.0, 1.0])
+	var texture := GradientTexture2D.new()
+	texture.gradient = gradient
+	texture.fill = GradientTexture2D.FILL_RADIAL
+	texture.fill_from = from
+	texture.fill_to = to
+	var rect := TextureRect.new()
+	rect.texture = texture
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rect.stretch_mode = TextureRect.STRETCH_SCALE
+	rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return rect
 
 
 func _goto(script: GDScript, data := {}) -> void:

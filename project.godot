@@ -34,6 +34,8 @@ pointing/emulate_touch_from_mouse=true
 ; UI-baserat 2D-spel är den rätt val även på mobil (lägst overhead).
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
+; Matcha UI:ts bakgrundsfärg så att letterbox-ytor inte blir svarta.
+environment/defaults/default_clear_color=Color(0.102, 0.086, 0.129, 1)
 ; Krävs för webbexport med vram_texture_compression/for_mobile=true –
 ; utan denna nekar Godot exporten utan felmeddelande.
 textures/vram_compression/import_etc2_astc=true

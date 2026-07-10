@@ -5,6 +5,7 @@ extends ScreenBase
 
 var selected_target := 0
 var victory_rewards := {}
+var flash_on_build := false  # träff-feedback efter en handling
 # Cachad motor-referens: Game.run.combat nollas av on_combat_victory(),
 # men segerpanelen behöver fortfarande läsa slutläget.
 var engine: CombatEngine = null
@@ -76,6 +77,13 @@ func build() -> void:
 		layout.add_child(_end_panel(combat))
 	else:
 		layout.add_child(_ability_grid(combat))
+
+	# Kort ljusblixt när en handling just utförts – billig men tydlig juice.
+	if flash_on_build:
+		flash_on_build = false
+		modulate = Color(1.35, 1.25, 1.2)
+		var tween := create_tween()
+		tween.tween_property(self, "modulate", Color.WHITE, 0.18)
 
 	# Onboarding-popup 1/3 (US-9.1).
 	if Game.should_show_tutorial("combat_intro"):
@@ -173,6 +181,7 @@ func _use_ability(ability_id: String) -> void:
 		if combat.is_over() and combat.result == "victory":
 			victory_rewards = Game.run.on_combat_victory(Game.character)
 			Game.save_game()
+		flash_on_build = true
 		rebuild()
 
 

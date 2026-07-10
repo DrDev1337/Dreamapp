@@ -16,23 +16,33 @@ const COLOR_MANA := Color("5580e0")
 const COLOR_WARN := Color("e0a437")
 const RARITY_COLORS := {"common": Color("b8b8b8"), "rare": Color("5fa8e0"), "epic": Color("b45fe0")}
 
+# Bundlade typsnitt (OFL, se assets/fonts/): Cinzel för rubriker,
+# Alegreya Sans för brödtext och knappar.
+const FONT_TITLE := preload("res://assets/fonts/cinzel-700.woff2")
+const FONT_BODY := preload("res://assets/fonts/alegreya-sans-400.woff2")
+const FONT_BOLD := preload("res://assets/fonts/alegreya-sans-700.woff2")
+
 
 ## Globalt tema: rundade knappar med tydliga tryck-tillstånd, luftiga
 ## paneler och konsekventa typsnittsstorlekar. Sätts på rot-noden i
 ## main.gd så att allt UI (även dialoger) ärver det.
 static func build_theme() -> Theme:
 	var theme := Theme.new()
+	theme.default_font = FONT_BODY
+	theme.default_font_size = 19
 
 	theme.set_font_size("font_size", "Label", 19)
+	theme.set_font("font", "Button", FONT_BOLD)
 	theme.set_font_size("font_size", "Button", 22)
 	theme.set_color("font_color", "Label", Color("e8e4f0"))
 
 	theme.set_stylebox("normal", "Button", _button_box(COLOR_BUTTON))
 	theme.set_stylebox("hover", "Button", _button_box(COLOR_BUTTON_HOVER))
-	theme.set_stylebox("pressed", "Button", _button_box(COLOR_BUTTON_PRESSED, COLOR_ACCENT))
+	theme.set_stylebox("pressed", "Button", _button_box(COLOR_BUTTON_PRESSED, COLOR_ACCENT, true))
 	theme.set_stylebox("focus", "Button", _button_box(COLOR_BUTTON_HOVER, COLOR_ACCENT))
-	var disabled_box := _button_box(Color(COLOR_BUTTON.r, COLOR_BUTTON.g, COLOR_BUTTON.b, 0.4))
-	disabled_box.border_color = Color(1, 1, 1, 0.06)
+	var disabled_box := _button_box(
+		Color(COLOR_BUTTON.r, COLOR_BUTTON.g, COLOR_BUTTON.b, 0.4), Color(1, 1, 1, 0.06), true
+	)
 	theme.set_stylebox("disabled", "Button", disabled_box)
 	theme.set_color("font_color", "Button", Color("f0edf7"))
 	theme.set_color("font_pressed_color", "Button", Color.WHITE)
@@ -42,6 +52,11 @@ static func build_theme() -> Theme:
 	var panel_box := StyleBoxFlat.new()
 	panel_box.bg_color = COLOR_PANEL
 	panel_box.set_corner_radius_all(14)
+	panel_box.border_width_top = 1
+	panel_box.border_color = Color(1, 1, 1, 0.05)
+	panel_box.shadow_color = Color(0, 0, 0, 0.35)
+	panel_box.shadow_size = 10
+	panel_box.shadow_offset = Vector2(0, 5)
 	panel_box.content_margin_left = 16
 	panel_box.content_margin_right = 16
 	panel_box.content_margin_top = 12
@@ -51,7 +66,10 @@ static func build_theme() -> Theme:
 	return theme
 
 
-static func _button_box(bg: Color, border := Color(1, 1, 1, 0.10)) -> StyleBoxFlat:
+## pressed=true tar bort skuggan så att knappen känns nedtryckt.
+static func _button_box(
+	bg: Color, border := Color(1, 1, 1, 0.10), pressed := false
+) -> StyleBoxFlat:
 	var box := StyleBoxFlat.new()
 	box.bg_color = bg
 	box.set_corner_radius_all(16)
@@ -60,6 +78,10 @@ static func _button_box(bg: Color, border := Color(1, 1, 1, 0.10)) -> StyleBoxFl
 	box.border_width_top = 1
 	box.border_width_bottom = 1
 	box.border_color = border
+	if not pressed:
+		box.shadow_color = Color(0, 0, 0, 0.30)
+		box.shadow_size = 4
+		box.shadow_offset = Vector2(0, 3)
 	box.content_margin_left = 18
 	box.content_margin_right = 18
 	box.content_margin_top = 12
@@ -70,9 +92,20 @@ static func _button_box(bg: Color, border := Color(1, 1, 1, 0.10)) -> StyleBoxFl
 static func title(text: String, size := 34) -> Label:
 	var label := Label.new()
 	label.text = text
+	label.add_theme_font_override("font", FONT_TITLE)
 	label.add_theme_font_size_override("font_size", size)
+	label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.5))
+	label.add_theme_constant_override("shadow_offset_y", 3)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	return label
+
+
+## Tunn accentlinje som avdelare under rubriker.
+static func divider(color := COLOR_ACCENT, height := 2) -> Control:
+	var line := ColorRect.new()
+	line.color = Color(color.r, color.g, color.b, 0.55)
+	line.custom_minimum_size = Vector2(0, height)
+	return line
 
 
 static func body(text: String, size := 20) -> Label:

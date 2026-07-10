@@ -46,7 +46,14 @@ func _build_slot_list() -> void:
 	layout.add_theme_constant_override("separation", 16)
 	add_child(UIKit.vmargin(layout))
 	layout.add_child(UIKit.spacer(40))
-	layout.add_child(UIKit.title("ESSENS", 52))
+	var game_title := UIKit.title("ESSENS", 56)
+	game_title.add_theme_color_override("font_color", Color("cfc4f5"))
+	game_title.add_theme_color_override(
+		"font_shadow_color",
+		Color(UIKit.COLOR_ACCENT.r, UIKit.COLOR_ACCENT.g, UIKit.COLOR_ACCENT.b, 0.55)
+	)
+	layout.add_child(game_title)
+	layout.add_child(UIKit.divider())
 	var tagline := UIKit.body("Samla Essens. Riskera allt. Gå djupare.", 18)
 	tagline.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	tagline.add_theme_color_override("font_color", Color(1, 1, 1, 0.6))

@@ -10,6 +10,10 @@ var data := {}
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	build()
+	# Mjuk intoning vid skärmbyte.
+	modulate.a = 0.0
+	var tween := create_tween()
+	tween.tween_property(self, "modulate:a", 1.0, 0.18).set_ease(Tween.EASE_OUT)
 
 
 ## Överskuggas av varje skärm.
