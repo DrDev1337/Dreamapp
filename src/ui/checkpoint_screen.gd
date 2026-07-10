@@ -54,7 +54,7 @@ func build() -> void:
 	shop_button.pressed.connect(func(): main.show_shop("checkpoint"))
 	layout.add_child(shop_button)
 
-	var stay_button := UIKit.big_button(
+	var stay_button := UIKit.primary_button(
 		"✓  STANNA – säkra %d Essens och avsluta" % run.carried_essence, 104
 	)
 	stay_button.pressed.connect(
@@ -71,7 +71,7 @@ func build() -> void:
 		lock_label.add_theme_color_override("font_color", UIKit.COLOR_WARN)
 		layout.add_child(lock_label)
 	else:
-		var deeper_button := UIKit.big_button("⬇  FORTSÄTT DJUPARE – riskera allt", 104)
+		var deeper_button := UIKit.primary_button("⬇  FORTSÄTT DJUPARE – riskera allt", 104)
 		deeper_button.pressed.connect(
 			func():
 				Game.save_game()

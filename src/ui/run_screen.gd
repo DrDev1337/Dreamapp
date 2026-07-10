@@ -96,7 +96,7 @@ func build() -> void:
 		layout.add_child(done_button)
 	else:
 		var next_room: Dictionary = run.rooms[run.current_depth]
-		var descend_button := UIKit.big_button(
+		var descend_button := UIKit.primary_button(
 			(
 				"⬇  Gå vidare – Djup %d: %s"
 				% [int(next_room["depth"]), RunGenerator.room_label(next_room)]

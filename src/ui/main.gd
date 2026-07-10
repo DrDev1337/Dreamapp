@@ -22,6 +22,7 @@ var current_screen: Control = null
 
 
 func _ready() -> void:
+	theme = UIKit.build_theme()
 	var background := ColorRect.new()
 	background.color = UIKit.COLOR_BG
 	background.set_anchors_preset(Control.PRESET_FULL_RECT)

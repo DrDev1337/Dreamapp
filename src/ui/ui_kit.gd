@@ -5,12 +5,66 @@ class_name UIKit
 
 const COLOR_BG := Color("1a1621")
 const COLOR_PANEL := Color("262033")
+const COLOR_BUTTON := Color("332b47")
+const COLOR_BUTTON_HOVER := Color("3e3456")
+const COLOR_BUTTON_PRESSED := Color("241e33")
 const COLOR_ACCENT := Color("8c6ff0")
+const COLOR_ACCENT_DARK := Color("6b4fd0")
 const COLOR_ESSENCE := Color("5fd4c4")
 const COLOR_HP := Color("e05555")
 const COLOR_MANA := Color("5580e0")
 const COLOR_WARN := Color("e0a437")
 const RARITY_COLORS := {"common": Color("b8b8b8"), "rare": Color("5fa8e0"), "epic": Color("b45fe0")}
+
+
+## Globalt tema: rundade knappar med tydliga tryck-tillstånd, luftiga
+## paneler och konsekventa typsnittsstorlekar. Sätts på rot-noden i
+## main.gd så att allt UI (även dialoger) ärver det.
+static func build_theme() -> Theme:
+	var theme := Theme.new()
+
+	theme.set_font_size("font_size", "Label", 19)
+	theme.set_font_size("font_size", "Button", 22)
+	theme.set_color("font_color", "Label", Color("e8e4f0"))
+
+	theme.set_stylebox("normal", "Button", _button_box(COLOR_BUTTON))
+	theme.set_stylebox("hover", "Button", _button_box(COLOR_BUTTON_HOVER))
+	theme.set_stylebox("pressed", "Button", _button_box(COLOR_BUTTON_PRESSED, COLOR_ACCENT))
+	theme.set_stylebox("focus", "Button", _button_box(COLOR_BUTTON_HOVER, COLOR_ACCENT))
+	var disabled_box := _button_box(Color(COLOR_BUTTON.r, COLOR_BUTTON.g, COLOR_BUTTON.b, 0.4))
+	disabled_box.border_color = Color(1, 1, 1, 0.06)
+	theme.set_stylebox("disabled", "Button", disabled_box)
+	theme.set_color("font_color", "Button", Color("f0edf7"))
+	theme.set_color("font_pressed_color", "Button", Color.WHITE)
+	theme.set_color("font_hover_color", "Button", Color.WHITE)
+	theme.set_color("font_disabled_color", "Button", Color(1, 1, 1, 0.35))
+
+	var panel_box := StyleBoxFlat.new()
+	panel_box.bg_color = COLOR_PANEL
+	panel_box.set_corner_radius_all(14)
+	panel_box.content_margin_left = 16
+	panel_box.content_margin_right = 16
+	panel_box.content_margin_top = 12
+	panel_box.content_margin_bottom = 12
+	theme.set_stylebox("panel", "PanelContainer", panel_box)
+
+	return theme
+
+
+static func _button_box(bg: Color, border := Color(1, 1, 1, 0.10)) -> StyleBoxFlat:
+	var box := StyleBoxFlat.new()
+	box.bg_color = bg
+	box.set_corner_radius_all(16)
+	box.border_width_left = 1
+	box.border_width_right = 1
+	box.border_width_top = 1
+	box.border_width_bottom = 1
+	box.border_color = border
+	box.content_margin_left = 18
+	box.content_margin_right = 18
+	box.content_margin_top = 12
+	box.content_margin_bottom = 12
+	return box
 
 
 static func title(text: String, size := 34) -> Label:
@@ -34,6 +88,17 @@ static func big_button(text: String, min_height := 88) -> Button:
 	button.text = text
 	button.custom_minimum_size = Vector2(0, min_height)
 	button.add_theme_font_size_override("font_size", 24)
+	# autowrap_mode på Button finns från Godot 4.3; set() är no-op annars.
+	button.set("autowrap_mode", TextServer.AUTOWRAP_WORD_SMART)
+	return button
+
+
+## Primär handling (run-start, checkpoint-valen): accentfärgad knapp.
+static func primary_button(text: String, min_height := 96) -> Button:
+	var button := big_button(text, min_height)
+	button.add_theme_stylebox_override("normal", _button_box(COLOR_ACCENT_DARK, COLOR_ACCENT))
+	button.add_theme_stylebox_override("hover", _button_box(COLOR_ACCENT, COLOR_ACCENT))
+	button.add_theme_stylebox_override("pressed", _button_box(COLOR_BUTTON_PRESSED, COLOR_ACCENT))
 	return button
 
 

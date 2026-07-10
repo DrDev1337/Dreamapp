@@ -80,7 +80,7 @@ func build() -> void:
 	layout.add_child(stats_panel)
 
 	layout.add_child(UIKit.spacer(8))
-	var start_button := UIKit.big_button("⚔  STARTA RUN", 110)
+	var start_button := UIKit.primary_button("⚔  STARTA RUN", 110)
 	start_button.pressed.connect(main.begin_run)
 	layout.add_child(start_button)
 
