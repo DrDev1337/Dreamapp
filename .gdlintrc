@@ -1,0 +1,6 @@
+# gdlint-konfiguration (pip install gdtoolkit)
+# Vi grupperar konstanter med sina hjälpfunktioner per domän i balansfiler,
+# därför är class-definitions-order avstängd.
+disable:
+  - class-definitions-order
+max-line-length: 140
