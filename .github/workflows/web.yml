@@ -1,0 +1,73 @@
+# Kör headless-testerna och publicerar en spelbar webbversion till
+# GitHub Pages vid varje push. Webbexporten byggs utan trådstöd
+# (variant/thread_support=false i export_presets.cfg) så att spelet
+# funkar på GitHub Pages (inga COOP/COEP-headers) och i iOS Safari.
+
+name: Test och publicera webbversion
+
+on:
+  push:
+    branches: [claude/roguelite-rpg-mobile-enbsug, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  GODOT_VERSION: "4.3"
+
+jobs:
+  test:
+    name: Headless-tester
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Importera projektet (bygger klasscachen)
+        run: godot --headless --import
+      - name: Kör kärnlogik-testerna
+        run: godot --headless -s tests/run_tests.gd
+
+  build:
+    name: Bygg webbexport
+    needs: test
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lägg exportmallarna där Godot letar
+        run: |
+          mkdir -v -p ~/.local/share/godot/export_templates
+          mv /root/.local/share/godot/export_templates/* ~/.local/share/godot/export_templates/
+      - name: Exportera till HTML5
+        run: |
+          mkdir -v -p build/web
+          godot --headless --import
+          godot --headless --export-release "Web" build/web/index.html
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy:
+    name: Publicera till GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Aktivera Pages om det inte redan är gjort
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - name: Deploya
+        id: deployment
+        uses: actions/deploy-pages@v4

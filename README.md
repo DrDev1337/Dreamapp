@@ -36,6 +36,18 @@ src/ui/               En skärm per fil; main.gd är router och äger spelflöde
 tests/run_tests.gd    Headless-tester för kärnlogiken
 ```
 
+## Spela i webbläsaren (mobil)
+
+Varje push till huvudbranchen bygger en HTML5-version via GitHub Actions och publicerar
+den till GitHub Pages:
+
+**https://drdev1337.github.io/Dreamapp/**
+
+Webbexporten byggs utan trådstöd så att den fungerar i iOS Safari och på GitHub Pages
+utan specialheaders. Save-filen ligger i webbläsarens lagring (IndexedDB) – rensar du
+webbdata försvinner din progression. Webben är testkanalen; riktiga butiksbyggen
+(Android/iOS) görs senare via Godots exportmallar.
+
 ## Tester och lint
 
 ```bash
