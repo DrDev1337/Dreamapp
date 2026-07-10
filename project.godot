@@ -34,3 +34,6 @@ pointing/emulate_touch_from_mouse=true
 ; UI-baserat 2D-spel är den rätt val även på mobil (lägst overhead).
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
+; Krävs för webbexport med vram_texture_compression/for_mobile=true –
+; utan denna nekar Godot exporten utan felmeddelande.
+textures/vram_compression/import_etc2_astc=true
