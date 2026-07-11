@@ -9,14 +9,20 @@ const _GRAVEYARD := preload("res://assets/icons/graveyard.svg")
 const _FIST := preload("res://assets/icons/fist.svg")
 const _MAGIC_SHIELD := preload("res://assets/icons/magic_shield.svg")
 const _WAR_CRY := preload("res://assets/icons/war_cry.svg")
+const _HEALING := preload("res://assets/icons/healing.svg")
+const _CRYSTAL := preload("res://assets/icons/crystal.svg")
+const _KNOCKOUT := preload("res://assets/icons/knockout.svg")
 
 const ABILITY := {
 	"basic_attack": _SWORD,
-	"focus_strike": preload("res://assets/icons/strike.svg"),
-	"power_strike": _FIST,
+	"taunt": _WAR_CRY,
 	"shield_bash": preload("res://assets/icons/shield_bash.svg"),
-	"war_cry": _WAR_CRY,
-	"berserk": preload("res://assets/icons/berserk.svg"),
+	"fortify": _MAGIC_SHIELD,
+	"bulwark": preload("res://assets/icons/berserk.svg"),
+	"mend": _HEALING,
+	"radiance": _CRYSTAL,
+	"smite": preload("res://assets/icons/strike.svg"),
+	"resurrect": _KNOCKOUT,
 	"firebolt": _FIREBALL,
 	"frost_nova": preload("res://assets/icons/frost.svg"),
 	"arcane_shield": _MAGIC_SHIELD,
@@ -32,10 +38,10 @@ const INTENT := {
 	"attack": _SWORD,
 	"heavy": _FIST,
 	"guard": _MAGIC_SHIELD,
-	"heal": preload("res://assets/icons/healing.svg"),
+	"heal": _HEALING,
 	"frenzy": _WAR_CRY,
 	"double": preload("res://assets/icons/crossed_swords.svg"),
-	"stunned": preload("res://assets/icons/knockout.svg"),
+	"stunned": _KNOCKOUT,
 }
 
 const INTENT_TINT := {
@@ -77,12 +83,13 @@ const ROOM := {
 }
 
 const CLASS_EMBLEM := {
-	"fighter": _SWORD,
+	"tank": _MAGIC_SHIELD,
+	"healer": _HEALING,
 	"mage": _FIREBALL,
 	"rogue": preload("res://assets/icons/ninja_mask.svg"),
 }
 
-const ESSENCE := preload("res://assets/icons/crystal.svg")
+const ESSENCE := _CRYSTAL
 const CAMPFIRE := preload("res://assets/icons/campfire.svg")
 const SKULL := preload("res://assets/icons/skull.svg")
 const LOCK := preload("res://assets/icons/lock.svg")

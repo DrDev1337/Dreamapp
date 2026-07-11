@@ -9,43 +9,43 @@ const PERMANENT := {
 	"vitality":
 	{
 		"name": "Vitality",
-		"desc": "+10 max HP per rank",
+		"desc": "+4 max HP per rank (all heroes)",
 		"stat": "max_hp",
-		"per_rank": 10,
+		"per_rank": 4,
 		"base_cost": 50,
 		"max_rank": 10,
 	},
 	"strength":
 	{
 		"name": "Strength",
-		"desc": "+2 attack per rank",
+		"desc": "+1 attack per rank (all heroes)",
 		"stat": "attack",
-		"per_rank": 2,
+		"per_rank": 1,
 		"base_cost": 60,
 		"max_rank": 10,
 	},
 	"wisdom":
 	{
 		"name": "Wisdom",
-		"desc": "+2 magic per rank",
+		"desc": "+1 magic per rank (all heroes)",
 		"stat": "magic",
-		"per_rank": 2,
+		"per_rank": 1,
 		"base_cost": 60,
 		"max_rank": 10,
 	},
 	"clarity":
 	{
 		"name": "Clarity",
-		"desc": "+4 max mana per rank",
+		"desc": "+2 max mana per rank (all heroes)",
 		"stat": "max_mana",
-		"per_rank": 4,
+		"per_rank": 2,
 		"base_cost": 50,
 		"max_rank": 8,
 	},
 	"toughness":
 	{
 		"name": "Toughness",
-		"desc": "+1 armor per rank",
+		"desc": "+1 armor per rank (all heroes)",
 		"stat": "armor",
 		"per_rank": 1,
 		"base_cost": 80,
@@ -87,9 +87,9 @@ const TEMPORARY := {
 	"blessing":
 	{
 		"name": "Blessing",
-		"desc": "+20 max HP this run",
+		"desc": "+8 max HP per hero this run",
 		"cost": 30,
-		"effect": {"start_hp_bonus": 20},
+		"effect": {"start_hp_bonus": 8},
 	},
 }
 
@@ -122,54 +122,54 @@ static func permanent_essence_bonus(owned: Dictionary) -> float:
 ## Köper permanent uppgradering med given valuta-pool.
 ## pool = "banked" (hubben) eller "carried" (checkpoint).
 ## Returnerar true om köpet gick igenom.
-static func buy_permanent(character: CharacterState, id: String, run: RunState = null) -> bool:
-	var rank := int(character.permanent_upgrades.get(id, 0))
+static func buy_permanent(party: PartyState, id: String, run: RunState = null) -> bool:
+	var rank := int(party.permanent_upgrades.get(id, 0))
 	var up: Dictionary = PERMANENT.get(id, {})
 	if up.is_empty() or rank >= int(up["max_rank"]):
 		return false
 	var cost := permanent_cost(id, rank)
-	if not _spend(character, run, cost):
+	if not _spend(party, run, cost):
 		return false
-	character.permanent_upgrades[id] = rank + 1
+	party.permanent_upgrades[id] = rank + 1
 	return true
 
 
 ## Köper en tillfällig boost. Vid checkpoint (run != null och fortsätter)
 ## aktiveras den direkt i pågående run, annars läggs den till nästa run.
 static func buy_temporary(
-	character: CharacterState, id: String, run: RunState = null, apply_now := false
+	party: PartyState, id: String, run: RunState = null, apply_now := false
 ) -> bool:
 	var boost: Dictionary = TEMPORARY.get(id, {})
 	if boost.is_empty():
 		return false
-	if not _spend(character, run, int(boost["cost"])):
+	if not _spend(party, run, int(boost["cost"])):
 		return false
 	var effect: Dictionary = boost["effect"].duplicate()
 	effect["id"] = id
 	if apply_now and run != null:
 		run.active_boosts.append(effect)
-		if effect.has("start_hp_bonus"):
-			run.player_combat["max_hp"] = (
-				int(run.player_combat["max_hp"]) + int(effect["start_hp_bonus"])
-			)
-			run.player_combat["hp"] = int(run.player_combat["hp"]) + int(effect["start_hp_bonus"])
-		if effect.has("damage_mult"):
-			run.player_combat["damage_mult"] = (
-				float(run.player_combat.get("damage_mult", 1.0)) * float(effect["damage_mult"])
-			)
+		for hero_combat in run.heroes_combat:
+			if effect.has("start_hp_bonus"):
+				hero_combat["max_hp"] = int(hero_combat["max_hp"]) + int(effect["start_hp_bonus"])
+				if int(hero_combat["hp"]) > 0:
+					hero_combat["hp"] = int(hero_combat["hp"]) + int(effect["start_hp_bonus"])
+			if effect.has("damage_mult"):
+				hero_combat["damage_mult"] = (
+					float(hero_combat.get("damage_mult", 1.0)) * float(effect["damage_mult"])
+				)
 	else:
-		character.pending_boosts.append(effect)
+		party.pending_boosts.append(effect)
 	return true
 
 
 ## Vid checkpoint spenderas buren Essens, i hubben bankad (US-2.2, US-2.6).
-static func _spend(character: CharacterState, run: RunState, cost: int) -> bool:
+static func _spend(party: PartyState, run: RunState, cost: int) -> bool:
 	if run != null and not run.finished:
 		if run.carried_essence < cost:
 			return false
 		run.carried_essence -= cost
 	else:
-		if character.banked_essence < cost:
+		if party.banked_essence < cost:
 			return false
-		character.banked_essence -= cost
+		party.banked_essence -= cost
 	return true

@@ -1,34 +1,25 @@
 extends ScreenBase
-## Level up (US-4.2): tre val som drar mot fighter, mage eller rogue.
-## Efter 3 val i samma riktning låses klassidentitet + signaturförmåga.
+## Party-level-up (party_design.md): välj EN uppgradering av tre,
+## kopplade till tre olika hjältar. 3 val åt samma håll på samma hjälte
+## låser klassidentitet + signaturförmåga.
 
 
 func build() -> void:
-	var character: CharacterState = Game.character
+	var party: PartyState = Game.party
 	var remaining := int(data.get("remaining", 1))
 	var layout := VBoxContainer.new()
 	layout.add_theme_constant_override("separation", 14)
 	add_child(UIKit.vmargin(layout))
 
-	layout.add_child(UIKit.title("LEVEL UP!  Level %d" % character.level, 36))
-	layout.add_child(UIKit.body("Choose your path (%d picks left):" % remaining, 18))
+	layout.add_child(UIKit.title("LEVEL UP!  Party level %d" % party.level, 34))
+	layout.add_child(UIKit.body("Choose who grows (%d picks left):" % remaining, 18))
 	layout.add_child(
-		UIKit.body(
-			(
-				"Fighter %d  ·  Mage %d  ·  Rogue %d   (3 picks in one path unlocks a class)"
-				% [
-					int(character.class_axis_points["fighter"]),
-					int(character.class_axis_points["mage"]),
-					int(character.class_axis_points["rogue"])
-				]
-			),
-			15
-		)
+		UIKit.body("3 picks in one path locks a hero's class and signature ability.", 14)
 	)
 	layout.add_child(UIKit.spacer(10))
 
 	var choices := LevelUp.generate_choices(
-		character, Game.run.rng if Game.run != null else RandomNumberGenerator.new()
+		party, Game.run.rng if Game.run != null else RandomNumberGenerator.new()
 	)
 	for choice in choices:
 		var button := UIKit.big_button("%s\n%s" % [choice["label"], choice["desc"]], 110)
@@ -40,15 +31,15 @@ func build() -> void:
 
 
 func _pick(choice: Dictionary, remaining: int) -> void:
-	var unlocked := LevelUp.apply_choice(Game.character, choice)
+	var unlocked := LevelUp.apply_choice(Game.party, choice)
 	Game.save_game()
 	if unlocked:
 		var axis := String(choice["axis"])
 		var signature := Abilities.get_ability(Abilities.SIGNATURE_BY_AXIS[axis])
 		UIKit.popup(
 			main,
-			"Class unlocked: %s!" % LevelUp.AXIS_LABELS[axis],
-			"You have found your path and learn the signature ability %s." % signature["name"]
+			"%s is now a %s!" % [choice["hero_name"], LevelUp.AXIS_LABELS[axis]],
+			"They have found their path and learn the signature ability %s." % signature["name"]
 		)
 	if remaining > 1:
 		data["remaining"] = remaining - 1

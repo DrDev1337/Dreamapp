@@ -7,7 +7,7 @@ extends ScreenBase
 
 func build() -> void:
 	var run: RunState = Game.run
-	var character: CharacterState = Game.character
+	var party: PartyState = Game.party
 	run.heal_at_checkpoint()
 	var layout := VBoxContainer.new()
 	layout.add_theme_constant_override("separation", 14)
@@ -20,7 +20,9 @@ func build() -> void:
 	header.add_child(UIKit.title("CHECKPOINT", 36))
 	layout.add_child(header)
 	layout.add_child(
-		UIKit.body("Depth %d. You are healed to full strength." % run.current_depth, 18)
+		UIKit.body(
+			"Depth %d. The party is revived and healed to full strength." % run.current_depth, 18
+		)
 	)
 
 	var essence_panel := UIKit.panel()
@@ -32,7 +34,7 @@ func build() -> void:
 	layout.add_child(essence_panel)
 
 	# US-2.5: varning om en obärgad hög är i fara.
-	if character.has_death_pile() and not run.pile_recovered_this_run:
+	if party.has_death_pile() and not run.pile_recovered_this_run:
 		var warn_panel := UIKit.panel(Color("3a2a20"))
 		var warn_label := (
 			UIKit
@@ -40,8 +42,8 @@ func build() -> void:
 				(
 					"Warning! You still have an unclaimed Essence pile (%d) at depth %d. Die again and it is replaced – lost forever!"
 					% [
-						int(character.death_pile.get("essence", 0)),
-						int(character.death_pile.get("depth", 1))
+						int(party.death_pile.get("essence", 0)),
+						int(party.death_pile.get("depth", 1))
 					]
 				),
 				16
@@ -70,7 +72,7 @@ func build() -> void:
 	layout.add_child(stay_button)
 
 	# US-1.3: djupare segment kräver nivå – tydlig indikation.
-	var lock_reason := run.deeper_lock_reason(character)
+	var lock_reason := run.deeper_lock_reason(party)
 	if lock_reason != "":
 		var lock_label := UIKit.body("Locked: " + lock_reason, 17)
 		lock_label.add_theme_color_override("font_color", UIKit.COLOR_WARN)

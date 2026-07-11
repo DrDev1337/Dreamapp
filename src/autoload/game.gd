@@ -1,19 +1,19 @@
 extends Node
-## Global spelhanterare (autoload "Game"). Äger karaktärsslots,
-## aktiv run och save-systemet. Allt sparas lokalt – helt offline (US-11.1).
+## Global spelhanterare (autoload "Game"). Äger party-slots, aktiv run
+## och save-systemet. Allt sparas lokalt – helt offline (US-11.1).
 ##
 ## Autosave-punkter (US-11.2): efter varje rum, vid checkpoint, vid köp,
-## efter varje spelarhandling i strid samt vid död/run-slut. Att stänga
-## appen mitt i en run återupptar exakt där man var.
+## efter varje hjältehandling i strid samt vid wipe/run-slut.
+## SAVE_VERSION 2 = party-modellen; äldre solo-saves kasseras.
 
 const SAVE_PATH := "user://essens_save.json"
-const SAVE_VERSION := 1
+const SAVE_VERSION := 2
 
 signal state_changed
 
 var slots: Array = [null, null, null]  # Dictionary per slot eller null (US-4.4)
 var active_slot := -1
-var character: CharacterState = null
+var party: PartyState = null
 var run: RunState = null
 var ads_removed := false  # IAP-flagga (US-10.2), delas över alla slots
 var _run_seed_counter := 0
@@ -23,12 +23,11 @@ func _ready() -> void:
 	load_game()
 
 
-# --- Slots och karaktärer (US-4.4) ---
+# --- Slots och partyn (US-4.4) ---
 
 
-func create_character(slot: int, name: String) -> void:
-	character = CharacterState.new()
-	character.character_name = name
+func create_party(slot: int, hero_names: Array) -> void:
+	party = PartyState.create(hero_names)
 	active_slot = slot
 	run = null
 	save_game()
@@ -39,7 +38,7 @@ func select_slot(slot: int) -> bool:
 	if data == null:
 		return false
 	active_slot = slot
-	character = CharacterState.from_dict(data["character"])
+	party = PartyState.from_dict(data["party"])
 	var run_data: Dictionary = data.get("run", {})
 	run = RunState.from_dict(run_data) if not run_data.is_empty() else null
 	return true
@@ -49,7 +48,7 @@ func delete_slot(slot: int) -> void:
 	slots[slot] = null
 	if slot == active_slot:
 		active_slot = -1
-		character = null
+		party = null
 		run = null
 	_write_to_disk()
 
@@ -58,11 +57,16 @@ func slot_summary(slot: int) -> Dictionary:
 	var data = slots[slot]
 	if data == null:
 		return {}
-	var c: Dictionary = data["character"]
+	var party_data: Dictionary = data["party"]
+	var classed := 0
+	for hero_data in party_data.get("heroes", []):
+		if String(hero_data.get("class_identity", "")) != "":
+			classed += 1
 	return {
-		"name": c.get("character_name", "?"),
-		"level": int(c.get("level", 1)),
-		"class_identity": c.get("class_identity", ""),
+		"name": party_data.get("party_name", "?"),
+		"level": int(party_data.get("level", 1)),
+		"hero_count": party_data.get("heroes", []).size(),
+		"classed_heroes": classed,
 		"has_active_run": not data.get("run", {}).is_empty(),
 	}
 
@@ -77,19 +81,19 @@ func has_active_run() -> bool:
 func start_run() -> void:
 	_run_seed_counter += 1
 	var seed_value := int(Time.get_unix_time_from_system()) + _run_seed_counter
-	run = RunState.start(character, seed_value)
+	run = RunState.start(party, seed_value)
 	save_game()
 
 
 func end_run_at_checkpoint() -> int:
-	var banked := run.bank_and_end(character)
+	var banked := run.bank_and_end(party)
 	run = null
 	save_game()
 	return banked
 
 
 func on_player_death() -> Dictionary:
-	var summary := run.on_death(character)
+	var summary := run.on_death(party)
 	run = null
 	save_game()
 	return summary
@@ -97,7 +101,7 @@ func on_player_death() -> Dictionary:
 
 func complete_run() -> int:
 	# Runnen klarades hela vägen: allt säkras precis som vid checkpoint.
-	var banked := run.bank_and_end(character)
+	var banked := run.bank_and_end(party)
 	run = null
 	save_game()
 	return banked
@@ -107,9 +111,9 @@ func complete_run() -> int:
 
 
 func save_game() -> void:
-	if active_slot >= 0 and character != null:
+	if active_slot >= 0 and party != null:
 		slots[active_slot] = {
-			"character": character.to_dict(),
+			"party": party.to_dict(),
 			"run": run.to_dict() if (run != null and not run.finished) else {},
 		}
 	_write_to_disk()
@@ -142,23 +146,27 @@ func load_game() -> void:
 		push_error("Corrupt save file, starting fresh.")
 		return
 	ads_removed = parsed.get("ads_removed", false)
+	if int(parsed.get("version", 1)) < SAVE_VERSION:
+		# Solo-saves från v1 är inte kompatibla med party-modellen.
+		push_warning("Old save format – starting fresh.")
+		return
 	var loaded_slots: Array = parsed.get("slots", [])
 	for i in Balance.CHARACTER_SLOTS:
 		slots[i] = loaded_slots[i] if i < loaded_slots.size() else null
 
 
-# --- Onboarding (US-9.1): max 3 popups, visas en gång per karaktär ---
+# --- Onboarding (US-9.1): max 3 popups, visas en gång per party ---
 
 const TUTORIAL_KEYS := ["combat_intro", "essence_intro", "checkpoint_intro"]
 
 
 func should_show_tutorial(key: String) -> bool:
-	if character == null or key not in TUTORIAL_KEYS:
+	if party == null or key not in TUTORIAL_KEYS:
 		return false
-	return not character.tutorial_flags.get(key, false)
+	return not party.tutorial_flags.get(key, false)
 
 
 func mark_tutorial_seen(key: String) -> void:
-	if character != null:
-		character.tutorial_flags[key] = true
+	if party != null:
+		party.tutorial_flags[key] = true
 		save_game()

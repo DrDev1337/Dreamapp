@@ -45,14 +45,18 @@ static func essence_for_enemy(depth: int, mult: float = 1.0) -> int:
 const ENEMY_HP_DEPTH_MULT := 0.40
 const ENEMY_DMG_DEPTH_MULT := 0.22
 
-# --- Spelarens grundvärden (US-4.1: svag start) ---
-const PLAYER_BASE_HP := 60
-const PLAYER_BASE_ATTACK := 7
-const PLAYER_BASE_MAGIC := 4
-const PLAYER_BASE_SPEED := 7
-const PLAYER_BASE_ARMOR := 0
-const PLAYER_BASE_MANA := 10
-const PLAYER_MANA_REGEN := 2
+# --- Partyt (party_design.md): 5 hjältar, 2 i frontraden ---
+const PARTY_SIZE := 5
+const FRONT_ROW_SIZE := 2
+
+# --- Hjältarnas grundvärden (US-4.1: svag start) ---
+const HERO_BASE_HP := 30
+const HERO_BASE_ATTACK := 5
+const HERO_BASE_MAGIC := 4
+const HERO_BASE_SPEED := 6
+const HERO_BASE_ARMOR := 0
+const HERO_BASE_MANA := 8
+const HERO_MANA_REGEN := 2
 
 # --- Level och klassning (US-4.2) ---
 const XP_PER_LEVEL_BASE := 40

@@ -1,21 +1,24 @@
 extends SceneTree
-## Balanssimulator: spelar N runs genom den riktiga motorn med en enkel
-## spelar-AI och skriver ut aggregerad statistik. Körs i CI:
-##   godot --headless -s tools/simulate.gd
+## Balanssimulator för party-modellen: spelar N runs genom den riktiga
+## motorn med en enkel spelar-AI och skriver ut aggregerad statistik.
+## Körs i CI:  godot --headless -s tools/simulate.gd
 ##
 ## AI-policy (medvetet enkel men rimlig):
-##  - Strid: AoE när 2+ fiender lever, annars kraftfullaste råd-havda
-##    ability; mål = healer som tänker hela, annars lägst HP.
-##  - Checkpoint: fortsätter djupare om HP > 35%, annars bankar.
-##  - Level up: driver mot fighter tills klass, sedan högsta axeln.
+##  - Strid, per hjälte: revive om någon fallit, heal om någon är låg,
+##    taunt från frontraden när den är redo, annars bästa skada
+##    (AoE när 2+ fiender lever); mål = healer som tänker hela, annars
+##    lägst HP.
+##  - Checkpoint: helar (väcker fallna) och fortsätter tills nivågrind.
+##  - Level up: driver mot kompositionen tank/rogue/healer/mage/mage.
 ##  - Hubb: köper billigaste permanenta uppgraderingen tills råd saknas.
+## "casual"-policyn efterliknar en ny spelare: bara basattack på första
+## bästa mål, första level up-valet, ingen komposition.
 
 const RUNS := 100
 const FRESH_RUNS := 50
-const PREFERRED_AXIS := "fighter"
+const DESIRED_AXES := ["tank", "rogue", "healer", "mage", "mage"]
+const SIM_NAMES := ["Sim1", "Sim2", "Sim3", "Sim4", "Sim5"]
 
-# "casual"-policyn efterliknar en ny spelare: bara basattack, första
-# bästa mål, ingen healer-prioritering.
 var casual_mode := false
 var early_outcomes: Array = []  # run-för-run för de 10 första progressionsrunsen
 
@@ -23,43 +26,42 @@ var outcome_counts := {}
 var death_by_depth := {}
 var death_room_types := {}
 var essence_banked_total := 0
-var banked_by_decile := {}
 var level_at_milestone := {}
 var piles_created := 0
 var piles_recovered := 0
 var fight_actions := {}  # depth -> [total_actions, fights]
-var hp_lost_by_depth := {}  # depth -> [total_lost, fights]
+var hp_lost_by_depth := {}  # depth -> [total_party_hp_lost, fights]
+var downed_by_depth := {}  # depth -> [hjältar nere efter vunnen strid, fights]
 var elite_stats := {"miniboss": [0, 0], "boss": [0, 0]}  # [försök, vinster]
 var stuck_fights := 0
 
 
 func _init() -> void:
-	var character := CharacterState.new()
-	character.character_name = "Sim"
+	var party := PartyState.create(SIM_NAMES)
 	for run_index in RUNS:
-		var before_level := character.level
-		var outcome := _play_run(character, 10_000 + run_index)
-		_hub_shopping(character)
+		var before_level := party.level
+		var outcome := _play_run(party, 10_000 + run_index)
+		_hub_shopping(party)
 		if run_index < 10:
 			early_outcomes.append(
-				"run %d: %s (nivå %d->%d)" % [run_index + 1, outcome, before_level, character.level]
+				"run %d: %s (nivå %d->%d)" % [run_index + 1, outcome, before_level, party.level]
 			)
 		if run_index + 1 in [10, 25, 50, 100]:
-			level_at_milestone[run_index + 1] = character.level
-	_print_report(character)
+			level_at_milestone[run_index + 1] = party.level
+	_print_report(party)
 	_simulate_fresh_cohort(false)
 	_simulate_fresh_cohort(true)
 	quit(0)
 
 
-## Färska karaktärer utan meta-progression: mäter run 1-upplevelsen.
+## Färska partyn utan meta-progression: mäter run 1-upplevelsen.
 func _simulate_fresh_cohort(casual: bool) -> void:
 	casual_mode = casual
 	var depth_reached := {}
 	var deaths := 0
 	for i in FRESH_RUNS:
-		var character := CharacterState.new()
-		var outcome := _play_run(character, 50_000 + i + (100_000 if casual else 0))
+		var party := PartyState.create(SIM_NAMES)
+		var outcome := _play_run(party, 50_000 + i + (100_000 if casual else 0))
 		var depth := 0
 		for part in outcome.split("_"):
 			if part.begins_with("d") and part.substr(1).is_valid_int():
@@ -71,51 +73,45 @@ func _simulate_fresh_cohort(casual: bool) -> void:
 		depth_reached[depth] = int(depth_reached.get(depth, 0)) + 1
 	casual_mode = false
 	var label := "CASUAL" if casual else "OPTIMAL"
-	print("=== FÄRSK KARAKTÄR (%d runs, %s AI) ===" % [FRESH_RUNS, label])
-	print("  döda: %d av %d" % [deaths, FRESH_RUNS])
+	print("=== FÄRSKT PARTY (%d runs, %s AI) ===" % [FRESH_RUNS, label])
+	print("  wipes: %d av %d" % [deaths, FRESH_RUNS])
 	var depths := depth_reached.keys()
 	depths.sort()
 	for depth in depths:
 		print("  slutdjup %d: %d" % [depth, depth_reached[depth]])
 
 
-func _play_run(character: CharacterState, seed_value: int) -> String:
-	var run := RunState.start(character, seed_value)
-	var had_pile := character.has_death_pile()
-	var banked_before := character.banked_essence
+func _play_run(party: PartyState, seed_value: int) -> String:
+	var run := RunState.start(party, seed_value)
+	var banked_before := party.banked_essence
 	var outcome := ""
 	var safety := 0
 	while safety < 100:
 		safety += 1
 		if run.is_run_complete():
-			run.bank_and_end(character)
+			run.bank_and_end(party)
 			outcome = "boss_clear"
 			break
 		if run.at_checkpoint():
 			run.heal_at_checkpoint()
-			if not run.can_go_deeper(character):
-				run.bank_and_end(character)
+			if not run.can_go_deeper(party):
+				run.bank_and_end(party)
 				outcome = "gated_bank_d%d" % run.current_depth
 				break
-			var hp_frac := float(run.player_combat["hp"]) / float(run.player_combat["max_hp"])
-			if hp_frac < 0.35:
-				run.bank_and_end(character)
-				outcome = "hp_bank_d%d" % run.current_depth
-				break
-		var event := run.enter_next_room(character)
+		var event := run.enter_next_room(party)
 		if int(event["recovered_essence"]) > 0:
 			piles_recovered += 1
 		var chest: Dictionary = event.get("chest_item", {})
 		if not chest.is_empty():
-			_maybe_equip(character, run, chest)
+			_maybe_equip(party, run, chest)
 			continue
 		var room := run.current_room()
 		var is_elite: bool = room["type"] in ["miniboss", "boss"]
 		if is_elite:
 			elite_stats[room["type"]][0] += 1
-		var won := _play_combat(run, character)
+		var won := _play_combat(run, party)
 		if not won:
-			var summary := run.on_death(character)
+			var summary := run.on_death(party)
 			if int(summary["lost_essence"]) > 0 or int(summary["lost_items"]) > 0:
 				piles_created += 1
 			death_by_depth[run.current_depth] = int(death_by_depth.get(run.current_depth, 0)) + 1
@@ -127,26 +123,32 @@ func _play_run(character: CharacterState, seed_value: int) -> String:
 	if outcome == "":
 		outcome = "safety_stop"
 	outcome_counts[outcome] = int(outcome_counts.get(outcome, 0)) + 1
-	essence_banked_total += character.banked_essence - banked_before
-	if had_pile:
-		pass  # högar räknas via piles_created/piles_recovered
+	essence_banked_total += party.banked_essence - banked_before
 	return outcome
 
 
+func _party_hp(combat: CombatEngine) -> int:
+	var total := 0
+	for hero in combat.heroes:
+		total += int(hero["hp"])
+	return total
+
+
 ## Returnerar true vid seger.
-func _play_combat(run: RunState, character: CharacterState) -> bool:
+func _play_combat(run: RunState, party: PartyState) -> bool:
 	var combat := run.combat
 	var depth := run.current_depth
-	var hp_before := int(combat.player["hp"])
+	var hp_before := _party_hp(combat)
 	var actions := 0
-	while not combat.is_over() and actions < 200:
+	while not combat.is_over() and actions < 400:
 		if not combat.awaiting_player:
 			combat.advance_until_player_turn()
 			continue
-		var choice := _choose_action(combat)
-		combat.player_action(choice[0], choice[1])
+		var choice := _choose_hero_action(combat)
+		if not combat.player_action(choice[0], choice[1]):
+			combat.player_action("basic_attack", -1)
 		actions += 1
-	if actions >= 200:
+	if actions >= 400:
 		stuck_fights += 1
 		return false
 	var bucket: Array = fight_actions.get(depth, [0, 0])
@@ -155,89 +157,139 @@ func _play_combat(run: RunState, character: CharacterState) -> bool:
 	fight_actions[depth] = bucket
 	if combat.result == "victory":
 		var lost_bucket: Array = hp_lost_by_depth.get(depth, [0, 0])
-		lost_bucket[0] += hp_before - int(combat.player["hp"])
+		lost_bucket[0] += hp_before - _party_hp(combat)
 		lost_bucket[1] += 1
 		hp_lost_by_depth[depth] = lost_bucket
-		var rewards := run.on_combat_victory(character)
+		var down_bucket: Array = downed_by_depth.get(depth, [0, 0])
+		down_bucket[0] += combat.downed_heroes().size()
+		down_bucket[1] += 1
+		downed_by_depth[depth] = down_bucket
+		var rewards := run.on_combat_victory(party)
 		for i in int(rewards["levels_gained"]):
-			_pick_levelup(character, run)
+			_pick_levelup(party, run)
 		var loot: Dictionary = rewards.get("loot", {})
 		if not loot.is_empty():
-			_maybe_equip(character, run, loot)
+			_maybe_equip(party, run, loot)
 		return true
 	return false
 
 
-func _choose_action(combat: CombatEngine) -> Array:
+func _usable(hero: Dictionary, id: String) -> bool:
+	if id not in hero["ability_ids"]:
+		return false
+	if int(hero["cooldowns"].get(id, 0)) > 0:
+		return false
+	var ability := Abilities.get_ability(id)
+	return int(hero["mana"]) >= int(ability["mana_cost"])
+
+
+func _choose_hero_action(combat: CombatEngine) -> Array:
+	var hero: Dictionary = combat.heroes[combat.active_hero]
 	var alive := combat.living_enemies()
 	if casual_mode:
 		return ["basic_attack", alive[0]]
+	# 1. Väck fallna kamrater.
+	if _usable(hero, "resurrect") and not combat.downed_heroes().is_empty():
+		return ["resurrect", -1]
+	# 2. Hela när någon är låg.
+	var wounded_count := 0
+	var worst_fraction := 1.0
+	for i in combat.living_heroes():
+		var ally: Dictionary = combat.heroes[i]
+		var fraction := float(ally["hp"]) / float(ally["max_hp"])
+		worst_fraction = minf(worst_fraction, fraction)
+		if fraction < 0.7:
+			wounded_count += 1
+	if worst_fraction < 0.55:
+		if _usable(hero, "radiance") and wounded_count >= 3:
+			return ["radiance", -1]
+		if _usable(hero, "mend"):
+			return ["mend", -1]
+	# 3. Tanka hotet från frontraden.
+	if String(hero["row"]) == "front":
+		for taunt_id in ["bulwark", "taunt"]:
+			if _usable(hero, taunt_id):
+				return [taunt_id, -1]
+	# 4. Bästa skada mot bästa mål.
 	var target: int = alive[0]
 	var lowest_hp := 999999
 	for i in alive:
 		if String(combat.enemies[i].get("intent", {}).get("kind", "")) == "heal":
 			target = i
-			lowest_hp = -1  # healern prioriteras alltid
 			break
 		if int(combat.enemies[i]["hp"]) < lowest_hp:
 			lowest_hp = int(combat.enemies[i]["hp"])
 			target = i
 	var best_id := "basic_attack"
 	var best_score := 0.0
-	for id in combat.player["ability_ids"]:
+	for id in hero["ability_ids"]:
+		if not _usable(hero, id):
+			continue
 		var ability := Abilities.get_ability(id)
-		if ability.get("kind", "") == "buff":
+		var kind := String(ability["kind"])
+		if kind not in ["physical", "magic"]:
 			continue
-		if int(combat.player["cooldowns"].get(id, 0)) > 0:
-			continue
-		if int(combat.player["mana"]) < int(ability["mana_cost"]):
-			continue
+		var stat := float(hero["magic"] if kind == "magic" else hero["attack"])
 		var multiplier := float(alive.size()) if ability["target"] == "all_enemies" else 1.0
-		var score := float(ability["power"]) * multiplier * float(ability.get("hits", 1))
+		var score := stat * float(ability["power"]) * multiplier * float(ability.get("hits", 1))
 		if score > best_score:
 			best_score = score
 			best_id = id
 	return [best_id, target]
 
 
-func _pick_levelup(character: CharacterState, run: RunState) -> void:
-	var choices := LevelUp.generate_choices(character, run.rng)
-	var axis := PREFERRED_AXIS
-	if character.class_identity != "":
-		axis = character.class_identity
+## Driver partyt mot kompositionen i DESIRED_AXES.
+func _pick_levelup(party: PartyState, run: RunState) -> void:
+	var choices := LevelUp.generate_choices(party, run.rng)
+	if casual_mode:
+		LevelUp.apply_choice(party, choices[0])
+		return
+	var best: Dictionary = choices[0]
+	var best_score := -1
 	for choice in choices:
-		if choice["axis"] == axis:
-			LevelUp.apply_choice(character, choice)
-			return
-	LevelUp.apply_choice(character, choices[0])
+		var hero_index := int(choice["hero_index"])
+		var hero: Hero = party.heroes[hero_index]
+		var axis := String(choice["axis"])
+		var score := 0
+		if axis == DESIRED_AXES[hero_index]:
+			score += 2
+		if hero.class_identity == axis:
+			score += 2
+		elif hero.class_identity == "":
+			score += int(hero.axis_points.get(axis, 0))
+		if score > best_score:
+			best_score = score
+			best = choice
+	LevelUp.apply_choice(party, best)
 
 
-func _maybe_equip(character: CharacterState, run: RunState, item: Dictionary) -> void:
-	var current: Dictionary = character.equipment.get(item["slot"], {})
+func _maybe_equip(party: PartyState, run: RunState, item: Dictionary) -> void:
+	var hero_index := run.best_hero_for_item(party, item)
+	var current: Dictionary = party.heroes[hero_index].equipment.get(String(item["slot"]), {})
 	if current.is_empty() or Items.power_score(item) > Items.power_score(current):
-		run.equip_item(character, item)
+		run.equip_item(party, item, hero_index)
 
 
-func _hub_shopping(character: CharacterState) -> void:
+func _hub_shopping(party: PartyState) -> void:
 	var bought := true
 	while bought:
 		bought = false
 		var cheapest_id := ""
 		var cheapest_cost := 999999
 		for id in Upgrades.PERMANENT:
-			var rank := int(character.permanent_upgrades.get(id, 0))
+			var rank := int(party.permanent_upgrades.get(id, 0))
 			if rank >= int(Upgrades.PERMANENT[id]["max_rank"]):
 				continue
 			var cost := Upgrades.permanent_cost(id, rank)
 			if cost < cheapest_cost:
 				cheapest_cost = cost
 				cheapest_id = id
-		if cheapest_id != "" and character.banked_essence >= cheapest_cost:
-			bought = Upgrades.buy_permanent(character, cheapest_id)
+		if cheapest_id != "" and party.banked_essence >= cheapest_cost:
+			bought = Upgrades.buy_permanent(party, cheapest_id)
 
 
-func _print_report(character: CharacterState) -> void:
-	print("=== SIMULERING: %d runs ===" % RUNS)
+func _print_report(party: PartyState) -> void:
+	print("=== SIMULERING: %d runs (party) ===" % RUNS)
 	print("--- De 10 första runsen ---")
 	for line in early_outcomes:
 		print("  " + line)
@@ -246,12 +298,12 @@ func _print_report(character: CharacterState) -> void:
 	keys.sort()
 	for key in keys:
 		print("  %s: %d" % [key, outcome_counts[key]])
-	print("--- Död per djup ---")
+	print("--- Wipes per djup ---")
 	var depths := death_by_depth.keys()
 	depths.sort()
 	for depth in depths:
 		print("  djup %d: %d" % [depth, death_by_depth[depth]])
-	print("--- Död per rumstyp ---")
+	print("--- Wipes per rumstyp ---")
 	for room_type in death_room_types:
 		print("  %s: %d" % [room_type, death_room_types[room_type]])
 	print("--- Elitstrider (försök/vinster) ---")
@@ -263,13 +315,15 @@ func _print_report(character: CharacterState) -> void:
 	for depth in fight_depths:
 		var bucket: Array = fight_actions[depth]
 		var lost: Array = hp_lost_by_depth.get(depth, [0, 1])
+		var downs: Array = downed_by_depth.get(depth, [0, 1])
 		print(
 			(
-				"  djup %d: %.1f handlingar/strid, %.1f HP förlorat/vunnen strid (%d strider)"
+				"  djup %d: %.1f handlingar/strid, %.1f party-HP förlorat, %.2f fällda hjältar/vunnen strid (%d strider)"
 				% [
 					depth,
 					float(bucket[0]) / bucket[1],
 					float(lost[0]) / maxi(1, lost[1]),
+					float(downs[0]) / maxi(1, downs[1]),
 					bucket[1]
 				]
 			)
@@ -283,12 +337,10 @@ func _print_report(character: CharacterState) -> void:
 	)
 	print("  Högar skapade: %d, återhämtade: %d" % [piles_created, piles_recovered])
 	print("  Nivå vid run 10/25/50/100: %s" % str(level_at_milestone))
-	print(
-		(
-			"  Slutnivå: %d, klass: %s, dödsfall: %d"
-			% [character.level, character.class_identity, character.deaths]
-		)
-	)
-	print("  Uppgraderingar: %s" % str(character.permanent_upgrades))
-	print("  Fastnade strider (>200 handlingar): %d" % stuck_fights)
+	var classes: Array = []
+	for hero in party.heroes:
+		classes.append(hero.class_identity if hero.class_identity != "" else "-")
+	print("  Slutnivå: %d, klasser: %s, wipes: %d" % [party.level, str(classes), party.deaths])
+	print("  Uppgraderingar: %s" % str(party.permanent_upgrades))
+	print("  Fastnade strider (>400 handlingar): %d" % stuck_fights)
 	print("=== SLUT ===")

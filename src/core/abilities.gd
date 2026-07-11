@@ -1,9 +1,13 @@
 class_name Abilities
-## Katalog över alla abilities (US-3.2). En ability är ett Dictionary med:
-##   id, name, desc, axis ("fighter"/"mage"/"rogue"/"none"),
-##   mana_cost, cooldown, power (multiplikator på attack/magic),
-##   kind ("physical"/"magic"/"heal"/"buff"), target ("enemy"/"all_enemies"/"self"),
-##   status: valfri statuseffekt {id, duration, ...} som läggs på målet.
+## Förmågekatalog för partyt (party_design.md). En förmåga är ett Dictionary:
+##   id, name, desc, axis ("tank"/"healer"/"mage"/"rogue"/"none"),
+##   mana_cost, cooldown, power, kind, target, status (valfri).
+## kind styr exekveringen i CombatEngine:
+##   "physical"/"magic" – skada mot fiender (target enemy/all_enemies)
+##   "heal"   – helar automatiskt mest skadad levande hjälte
+##   "buff"   – status på användaren (target self) eller auto-allierad (ally)
+##   "taunt"  – status på alla levande fiender: de måste slå användaren
+##   "revive" – väcker första fallna hjälten
 
 const CATALOG := {
 	"basic_attack":
@@ -18,68 +22,109 @@ const CATALOG := {
 		"kind": "physical",
 		"target": "enemy",
 	},
-	"focus_strike":
+	# --- Tank ---
+	"taunt":
 	{
-		"id": "focus_strike",
-		"name": "Focused Strike",
-		"desc": "A powerful blow. Costs mana.",
-		"axis": "none",
+		"id": "taunt",
+		"name": "Taunt",
+		"desc": "Forces all enemies to attack you for 2 turns.",
+		"axis": "tank",
 		"mana_cost": 3,
-		"cooldown": 0,
-		"power": 1.6,
-		"kind": "physical",
-		"target": "enemy",
-	},
-	# --- Fighter ---
-	"power_strike":
-	{
-		"id": "power_strike",
-		"name": "Power Strike",
-		"desc": "A heavy blow with high damage.",
-		"axis": "fighter",
-		"mana_cost": 4,
-		"cooldown": 0,
-		"power": 2.0,
-		"kind": "physical",
-		"target": "enemy",
+		"cooldown": 2,
+		"power": 0.0,
+		"kind": "taunt",
+		"target": "all_enemies",
+		"status": {"id": "taunt", "duration": 2},
 	},
 	"shield_bash":
 	{
 		"id": "shield_bash",
 		"name": "Shield Bash",
 		"desc": "Damages and stuns the enemy for a turn.",
-		"axis": "fighter",
-		"mana_cost": 5,
+		"axis": "tank",
+		"mana_cost": 4,
 		"cooldown": 2,
-		"power": 0.8,
+		"power": 0.9,
 		"kind": "physical",
 		"target": "enemy",
 		"status": {"id": "stun", "duration": 1},
 	},
-	"war_cry":
+	"fortify":
 	{
-		"id": "war_cry",
-		"name": "War Cry",
-		"desc": "+50% attack for 3 turns.",
-		"axis": "fighter",
-		"mana_cost": 4,
-		"cooldown": 3,
+		"id": "fortify",
+		"name": "Fortify",
+		"desc": "Shield yourself, absorbing 12 damage.",
+		"axis": "tank",
+		"mana_cost": 3,
+		"cooldown": 2,
 		"power": 0.0,
 		"kind": "buff",
 		"target": "self",
-		"status": {"id": "atk_up", "duration": 3, "mult": 1.5},
+		"status": {"id": "shield", "duration": 3, "amount": 12},
 	},
-	"berserk":
+	"bulwark":
 	{
-		"id": "berserk",
-		"name": "Berserk",
-		"desc": "Signature: a massive blow against all enemies.",
-		"axis": "fighter",
+		"id": "bulwark",
+		"name": "Bulwark",
+		"desc": "Signature: massive shield and taunts all enemies.",
+		"axis": "tank",
 		"mana_cost": 8,
 		"cooldown": 4,
-		"power": 1.5,
-		"kind": "physical",
+		"power": 0.0,
+		"kind": "taunt",
 		"target": "all_enemies",
+		"status": {"id": "taunt", "duration": 2},
+		"self_status": {"id": "shield", "duration": 3, "amount": 24},
+		"signature": true,
+	},
+	# --- Healer ---
+	"mend":
+	{
+		"id": "mend",
+		"name": "Mend",
+		"desc": "Heal the most wounded ally.",
+		"axis": "healer",
+		"mana_cost": 3,
+		"cooldown": 0,
+		"power": 2.2,
+		"kind": "heal",
+		"target": "ally",
+	},
+	"radiance":
+	{
+		"id": "radiance",
+		"name": "Radiance",
+		"desc": "Heal the whole party a little.",
+		"axis": "healer",
+		"mana_cost": 6,
+		"cooldown": 2,
+		"power": 0.9,
+		"kind": "heal",
+		"target": "all_allies",
+	},
+	"smite":
+	{
+		"id": "smite",
+		"name": "Smite",
+		"desc": "Light magic damage.",
+		"axis": "healer",
+		"mana_cost": 2,
+		"cooldown": 0,
+		"power": 1.1,
+		"kind": "magic",
+		"target": "enemy",
+	},
+	"resurrect":
+	{
+		"id": "resurrect",
+		"name": "Resurrect",
+		"desc": "Signature: revive a fallen ally at half strength.",
+		"axis": "healer",
+		"mana_cost": 8,
+		"cooldown": 6,
+		"power": 0.5,
+		"kind": "revive",
+		"target": "ally",
 		"signature": true,
 	},
 	# --- Mage ---
@@ -112,13 +157,13 @@ const CATALOG := {
 	{
 		"id": "arcane_shield",
 		"name": "Arcane Shield",
-		"desc": "Absorbs damage for 3 turns.",
+		"desc": "Shield the most wounded ally.",
 		"axis": "mage",
-		"mana_cost": 5,
-		"cooldown": 3,
+		"mana_cost": 4,
+		"cooldown": 2,
 		"power": 0.0,
 		"kind": "buff",
-		"target": "self",
+		"target": "ally",
 		"status": {"id": "shield", "duration": 3, "amount": 15},
 	},
 	"meteor":
@@ -167,7 +212,7 @@ const CATALOG := {
 		"name": "Evasion",
 		"desc": "Evades the next attack.",
 		"axis": "rogue",
-		"mana_cost": 4,
+		"mana_cost": 3,
 		"cooldown": 3,
 		"power": 0.0,
 		"kind": "buff",
@@ -190,7 +235,10 @@ const CATALOG := {
 	},
 }
 
-const SIGNATURE_BY_AXIS := {"fighter": "berserk", "mage": "meteor", "rogue": "shadow_dance"}
+const AXES := ["tank", "healer", "mage", "rogue"]
+const SIGNATURE_BY_AXIS := {
+	"tank": "bulwark", "healer": "resurrect", "mage": "meteor", "rogue": "shadow_dance"
+}
 
 
 static func get_ability(id: String) -> Dictionary:
@@ -200,7 +248,7 @@ static func get_ability(id: String) -> Dictionary:
 static func abilities_for_axis(axis: String) -> Array:
 	var result: Array = []
 	for id in CATALOG:
-		var ab: Dictionary = CATALOG[id]
-		if ab.get("axis", "") == axis and not ab.get("signature", false):
+		var ability: Dictionary = CATALOG[id]
+		if ability.get("axis", "") == axis and not ability.get("signature", false):
 			result.append(id)
 	return result

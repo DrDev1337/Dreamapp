@@ -1,13 +1,16 @@
-# Essens (arbetsnamn)
+# Essence (arbetsnamn)
 
 Turbaserat roguelite-RPG för mobil (iOS + Android). Portrait, enhandsspel, helt offline.
 
-**Kärnkroken:** du samlar *Essens* från besegrade fiender. Vid varje checkpoint väljer du –
-stanna och säkra allt, eller fortsätt djupare med allt osäkrat på spel. Dör du lämnas
-allt i en hög på ditt djup. Nå dit i nästa run och du får tillbaka det. Dör du igen
-först – då är det borta för alltid.
+**Kärnkroken:** du leder ett **party med fem nivå 1-rekryter** ner i djupet. Varje hjälte
+agerar en gång per runda; level up-val formar dem mot tank/healer/mage/rogue – tre val åt
+samma håll låser klassen och ger en signaturförmåga. Samtidigt samlar ni *Essens* från
+besegrade fiender. Vid varje checkpoint väljer du – stanna och säkra allt, eller fortsätt
+djupare med allt osäkrat på spel. Wipear partyt lämnas allt i en hög på ert djup. Nå dit
+i nästa run och ni får tillbaka det. Wipear ni igen först – då är det borta för alltid.
 
-Byggt i **Godot 4.3** (mobile-renderer). Se `docs/user_stories.md` för hela specen.
+Byggt i **Godot 4.3** (mobile-renderer). Se `docs/user_stories.md` för grundspecen och
+`docs/party_design.md` för party-modellen.
 
 ## Komma igång
 
@@ -23,17 +26,19 @@ src/autoload/game.gd  Global state: slots, save/load, run-livscykel   (autoload 
 src/autoload/ads.gd   Ads/IAP-stub – byts mot riktig SDK senare       (autoload "Ads")
 src/core/             Ren spellogik utan UI-beroenden (testbar headless)
   balance.gd          ALLA balanssiffror – tuning sker bara här
-  abilities.gd        Förmågekatalog (fighter/mage/rogue + signaturer)
+  abilities.gd        Förmågekatalog (tank/healer/mage/rogue + signaturer)
   enemies.gd          Fiendekatalog: 5 typer + miniboss + boss, djupskalning
-  combat.gd           Turbaserad stridsmotor, serialiserbar mitt i strid
-  character.gd        Persistent karaktär: nivåer, klassval, utrustning, dödshög
-  levelup.gd          Level-up-val som drar mot fighter/mage/rogue
+  combat.gd           Turbaserad party-stridsmotor, serialiserbar mitt i strid
+  hero.gd             En hjälte: klassval, förmågor, utrustning
+  party.gd            Partyt – savefilens rot: hjältar, nivå, Essens, dödshög
+  levelup.gd          Level-up-val: 3 val kopplade till 3 olika hjältar
   items.gd            Loot: 3 rariteter, episkt säkras direkt
   run_generator.gd    Procedurgenerering med fasta checkpoint/boss-regler
   run_state.gd        Pågående run: buren Essens, osäkrad loot, corpse run
   upgrades.gd         Permanenta uppgraderingar + tillfälliga boosts
 src/ui/               En skärm per fil; main.gd är router och äger spelflödet
 tests/run_tests.gd    Headless-tester för kärnlogiken
+tools/simulate.gd     Balanssimulator – spelar 100+ runs i CI och rapporterar
 ```
 
 ## Spela i webbläsaren (mobil)

@@ -144,7 +144,7 @@ func begin_run() -> void:
 
 ## Spelaren trycker "Gå vidare" i run-vyn.
 func descend() -> void:
-	var event: Dictionary = Game.run.enter_next_room(Game.character)
+	var event: Dictionary = Game.run.enter_next_room(Game.party)
 	Game.save_game()  # autosave efter rumsbyte (US-11.2)
 	if event["combat_started"]:
 		show_combat()

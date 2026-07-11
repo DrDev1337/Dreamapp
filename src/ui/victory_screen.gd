@@ -5,7 +5,7 @@ extends ScreenBase
 
 func build() -> void:
 	var banked := int(data.get("banked", 0))
-	var character: CharacterState = Game.character
+	var party: PartyState = Game.party
 	var layout := VBoxContainer.new()
 	layout.add_theme_constant_override("separation", 16)
 	add_child(UIKit.vmargin(layout))
@@ -23,14 +23,12 @@ func build() -> void:
 	var banked_label := UIKit.body("Essence banked: +%d" % banked, 24)
 	banked_label.add_theme_color_override("font_color", UIKit.COLOR_ESSENCE)
 	box.add_child(banked_label)
-	box.add_child(UIKit.body("Total banked Essence: %d" % character.banked_essence, 18))
+	box.add_child(UIKit.body("Total banked Essence: %d" % party.banked_essence, 18))
 	box.add_child(
-		UIKit.body(
-			"Level %d   ·   Runs completed: %d" % [character.level, character.runs_completed], 16
-		)
+		UIKit.body("Level %d   ·   Runs completed: %d" % [party.level, party.runs_completed], 16)
 	)
-	if character.bosses_defeated > 0:
-		box.add_child(UIKit.body("Bosses defeated: %d" % character.bosses_defeated, 16))
+	if party.bosses_defeated > 0:
+		box.add_child(UIKit.body("Bosses defeated: %d" % party.bosses_defeated, 16))
 	panel.add_child(box)
 	layout.add_child(panel)
 

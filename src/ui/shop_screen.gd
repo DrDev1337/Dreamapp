@@ -61,9 +61,7 @@ func _scrollable() -> ScrollContainer:
 
 
 func _currency_label() -> Label:
-	var amount := (
-		Game.run.carried_essence if context == "checkpoint" else Game.character.banked_essence
-	)
+	var amount := Game.run.carried_essence if context == "checkpoint" else Game.party.banked_essence
 	var source := "carried" if context == "checkpoint" else "banked"
 	var label := UIKit.body("Essence (%s): %d" % [source, amount], 22)
 	label.add_theme_color_override("font_color", UIKit.COLOR_ESSENCE)
@@ -72,7 +70,7 @@ func _currency_label() -> Label:
 
 func _permanent_row(id: String) -> Control:
 	var up: Dictionary = Upgrades.PERMANENT[id]
-	var rank := int(Game.character.permanent_upgrades.get(id, 0))
+	var rank := int(Game.party.permanent_upgrades.get(id, 0))
 	var maxed: bool = rank >= int(up["max_rank"])
 	var cost := Upgrades.permanent_cost(id, rank)
 	var text: String
@@ -88,7 +86,7 @@ func _permanent_row(id: String) -> Control:
 	button.pressed.connect(
 		func():
 			var run: RunState = Game.run if context == "checkpoint" else null
-			if Upgrades.buy_permanent(Game.character, id, run):
+			if Upgrades.buy_permanent(Game.party, id, run):
 				Game.save_game()  # autosave vid köp (US-11.2)
 				rebuild()
 			else:
@@ -105,7 +103,7 @@ func _temporary_row(id: String) -> Control:
 	button.pressed.connect(
 		func():
 			var run: RunState = Game.run if context == "checkpoint" else null
-			if Upgrades.buy_temporary(Game.character, id, run, context == "checkpoint"):
+			if Upgrades.buy_temporary(Game.party, id, run, context == "checkpoint"):
 				Game.save_game()
 				rebuild()
 			else:
