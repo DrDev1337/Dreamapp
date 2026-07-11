@@ -251,12 +251,12 @@ func _pick_levelup(party: PartyState, run: RunState) -> void:
 		var hero: Hero = party.heroes[hero_index]
 		var axis := String(choice["axis"])
 		var score := 0
-		if axis == DESIRED_AXES[hero_index]:
-			score += 2
-		if hero.class_identity == axis:
-			score += 2
-		elif hero.class_identity == "":
-			score += int(hero.axis_points.get(axis, 0))
+		# Lås kompositionen först: oklassade hjältar på önskad axel går före
+		# att mata redan låsta hjältar med fler stats.
+		if hero.class_identity == "":
+			score += 4 if axis == DESIRED_AXES[hero_index] else int(hero.axis_points.get(axis, 0))
+		else:
+			score += 2 if hero.class_identity == axis else 0
 		if score > best_score:
 			best_score = score
 			best = choice
