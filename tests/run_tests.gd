@@ -233,10 +233,10 @@ func test_hero_and_classing() -> void:
 	for choice in choices:
 		hero_indices[int(choice["hero_index"])] = true
 	check(hero_indices.size() == 3, "valen gäller tre olika hjältar")
-	var before := party.heroes[int(choices[0]["hero_index"])].bonus_stats.duplicate()
+	var chosen_hero: Hero = party.heroes[int(choices[0]["hero_index"])]
+	var before := str(chosen_hero.bonus_stats)
 	LevelUp.apply_choice(party, choices[0])
-	var after: Dictionary = party.heroes[int(choices[0]["hero_index"])].bonus_stats
-	check(str(before) != str(after), "valet ger hjälten stats")
+	check(str(chosen_hero.bonus_stats) != before, "valet ger hjälten stats")
 
 
 func test_run_generation() -> void:
