@@ -98,7 +98,7 @@ static func permanent_cost(id: String, current_rank: int) -> int:
 	var up: Dictionary = PERMANENT.get(id, {})
 	if up.is_empty():
 		return 0
-	return int(int(up["base_cost"]) * pow(1.5, current_rank))
+	return int(int(up["base_cost"]) * pow(1.7, current_rank))
 
 
 static func permanent_stat_bonus(owned: Dictionary, stat: String) -> int:

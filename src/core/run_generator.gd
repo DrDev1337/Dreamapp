@@ -38,12 +38,14 @@ static func _last_type(rooms: Array) -> String:
 
 static func _roll_enemies(rng: RandomNumberGenerator, depth: int) -> Array:
 	var pool := Enemies.pool_for_depth(depth)
+	# Djup 1-2 är alltid singelstrider – dubbelfiender före första
+	# checkpointen var det som dödade nya spelare i rum 2.
 	var count := 1
 	if depth >= 6:
 		count = rng.randi_range(2, 3)
-	elif depth >= 3:
+	elif depth >= 4:
 		count = 2
-	elif depth >= 2:
+	elif depth == 3:
 		count = rng.randi_range(1, 2)
 	var ids: Array = []
 	for i in count:

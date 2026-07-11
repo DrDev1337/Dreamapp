@@ -42,21 +42,21 @@ static func essence_for_enemy(depth: int, mult: float = 1.0) -> int:
 
 
 # --- Fiendeskalning (US-1.2) ---
-const ENEMY_HP_DEPTH_MULT := 0.25
-const ENEMY_DMG_DEPTH_MULT := 0.15
+const ENEMY_HP_DEPTH_MULT := 0.40
+const ENEMY_DMG_DEPTH_MULT := 0.22
 
 # --- Spelarens grundvärden (US-4.1: svag start) ---
-const PLAYER_BASE_HP := 50
-const PLAYER_BASE_ATTACK := 6
+const PLAYER_BASE_HP := 60
+const PLAYER_BASE_ATTACK := 7
 const PLAYER_BASE_MAGIC := 4
-const PLAYER_BASE_SPEED := 5
+const PLAYER_BASE_SPEED := 7
 const PLAYER_BASE_ARMOR := 0
 const PLAYER_BASE_MANA := 10
 const PLAYER_MANA_REGEN := 2
 
 # --- Level och klassning (US-4.2) ---
 const XP_PER_LEVEL_BASE := 40
-const XP_LEVEL_GROWTH := 1.4
+const XP_LEVEL_GROWTH := 1.55
 const CLASS_UNLOCK_PICKS := 3  # val i samma riktning innan klassidentitet
 
 
