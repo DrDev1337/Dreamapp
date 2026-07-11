@@ -35,8 +35,9 @@ behålls oförändrad – partyt ersätter bara hjälten som farkost.
 ## Roller och klassning (4 axlar)
 
 Alla hjältar startar med enbart basattack. Vid party-level-up väljs **en**
-uppgradering: 3 alternativ, kopplade till tre olika hjältar. Tre val åt samma håll
-på samma hjälte låser klassidentitet + signaturförmåga.
+uppgradering: 3 alternativ, kopplade till tre olika hjältar. Två val åt samma håll
+på samma hjälte låser klassidentitet + signaturförmåga (var tre, men simuleringen
+visade att bara 2 av 5 klasser hann låsas på 100 runs – combon uppstod aldrig).
 
 | Axel | Karaktär | Förmågor | Signatur |
 |---|---|---|---|

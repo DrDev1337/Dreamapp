@@ -63,7 +63,9 @@ const HERO_MANA_REGEN := 2
 # --- Level och klassning (US-4.2) ---
 const XP_PER_LEVEL_BASE := 40
 const XP_LEVEL_GROWTH := 1.45  # fler nivåer = fler klassval (party-pivotens kärna)
-const CLASS_UNLOCK_PICKS := 3  # val i samma riktning innan klassidentitet
+# Val i samma riktning innan klassidentitet låses. Simuleringsdata: med 3
+# låstes bara 2 av 5 klasser på 100 runs – party-combon hann aldrig uppstå.
+const CLASS_UNLOCK_PICKS := 2
 
 
 static func xp_for_level(level: int) -> int:

@@ -215,10 +215,13 @@ func test_hero_and_classing() -> void:
 	print("Hero & classing…")
 	var hero := Hero.new()
 	check(hero.ability_ids == ["basic_attack"], "rekryter börjar med bara basattack (US-4.1)")
-	check(not hero.apply_class_pick("mage"), "1 val låser inte klass")
-	hero.apply_class_pick("mage")
+	for i in Balance.CLASS_UNLOCK_PICKS - 1:
+		check(not hero.apply_class_pick("mage"), "för få val låser inte klass")
 	var unlocked := hero.apply_class_pick("mage")
-	check(unlocked and hero.class_identity == "mage", "3 val i samma riktning låser klass (US-4.2)")
+	check(
+		unlocked and hero.class_identity == "mage",
+		"%d val i samma riktning låser klass (US-4.2)" % Balance.CLASS_UNLOCK_PICKS
+	)
 	check("meteor" in hero.ability_ids, "signaturförmåga lärs vid klasslåsning")
 
 	var party := PartyState.create(["Ask", "Embla", "Runa", "Grim", "Saga"])

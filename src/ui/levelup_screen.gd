@@ -1,7 +1,7 @@
 extends ScreenBase
 ## Party-level-up (party_design.md): välj EN uppgradering av tre,
-## kopplade till tre olika hjältar. 3 val åt samma håll på samma hjälte
-## låser klassidentitet + signaturförmåga.
+## kopplade till tre olika hjältar. CLASS_UNLOCK_PICKS val åt samma håll
+## på samma hjälte låser klassidentitet + signaturförmåga.
 
 
 func build() -> void:
@@ -14,7 +14,13 @@ func build() -> void:
 	layout.add_child(UIKit.title("LEVEL UP!  Party level %d" % party.level, 34))
 	layout.add_child(UIKit.body("Choose who grows (%d picks left):" % remaining, 18))
 	layout.add_child(
-		UIKit.body("3 picks in one path locks a hero's class and signature ability.", 14)
+		UIKit.body(
+			(
+				"%d picks in one path locks a hero's class and signature ability."
+				% Balance.CLASS_UNLOCK_PICKS
+			),
+			14
+		)
 	)
 	layout.add_child(UIKit.spacer(10))
 

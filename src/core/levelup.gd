@@ -1,8 +1,8 @@
 class_name LevelUp
 ## Party-level-up (party_design.md): vid varje ny partynivå väljs EN
 ## uppgradering av tre, kopplade till tre olika hjältar. Valen driver
-## hjältarna mot tank/healer/mage/rogue; 3 val åt samma håll på samma
-## hjälte låser klassidentitet + signaturförmåga.
+## hjältarna mot tank/healer/mage/rogue; CLASS_UNLOCK_PICKS val åt samma
+## håll på samma hjälte låser klassidentitet + signaturförmåga.
 
 const AXIS_LABELS := {"tank": "Tank", "healer": "Healer", "mage": "Mage", "rogue": "Rogue"}
 

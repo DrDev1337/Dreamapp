@@ -1,8 +1,8 @@
 class_name Hero
 extends RefCounted
 ## En hjälte i partyt. Ren data + regler, serialiseras med to_dict/from_dict.
-## Klassidentitet växer ur uppgraderingsval (party_design.md): 3 val åt
-## samma håll låser klassen och ger signaturförmågan.
+## Klassidentitet växer ur uppgraderingsval (party_design.md):
+## CLASS_UNLOCK_PICKS val åt samma håll låser klassen och ger signaturen.
 
 var hero_name := "Nameless"
 var axis_points := {"tank": 0, "healer": 0, "mage": 0, "rogue": 0}
