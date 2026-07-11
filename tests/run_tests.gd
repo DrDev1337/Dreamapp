@@ -41,10 +41,11 @@ func test_balance() -> void:
 	check(Balance.FRONT_ROW_SIZE == 2, "frontraden är 2 hjältar")
 	check(Balance.required_level_for_depth(1) == 1, "djup 1 kräver nivå 1")
 	check(Balance.required_level_for_depth(3) == 1, "djup 3 kräver nivå 1")
-	check(Balance.required_level_for_depth(4) == 2, "djup 4 kräver nivå 2 (US-1.3)")
-	check(Balance.required_level_for_depth(8) == 4, "djup 8 kräver nivå 4")
+	check(Balance.required_level_for_depth(4) == 3, "djup 4 kräver nivå 3 (US-1.3)")
+	check(Balance.required_level_for_depth(8) == 5, "djup 8 kräver nivå 5")
 	check(Balance.max_depth_for_level(1) == 3, "nivå 1 når djup 3")
-	check(Balance.max_depth_for_level(4) == 8, "nivå 4 når djup 8")
+	check(Balance.max_depth_for_level(3) == 6, "nivå 3 når djup 6")
+	check(Balance.max_depth_for_level(5) == 8, "nivå 5 når djup 8")
 	check(
 		Balance.essence_for_enemy(3) > Balance.essence_for_enemy(1),
 		"Essens skalar med djup (US-2.1)"

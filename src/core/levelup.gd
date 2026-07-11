@@ -62,7 +62,7 @@ static func _pick_axis(hero: Hero, rng: RandomNumberGenerator) -> String:
 		if int(hero.axis_points[axis]) > best:
 			best = int(hero.axis_points[axis])
 			best_axis = axis
-	if best_axis != "" and rng.randf() < 0.7:
+	if best_axis != "" and rng.randf() < 0.85:
 		return best_axis
 	return Abilities.AXES[rng.randi_range(0, Abilities.AXES.size() - 1)]
 

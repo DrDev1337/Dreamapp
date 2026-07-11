@@ -8,10 +8,12 @@ const CHECKPOINT_AFTER_ROOMS: Array[int] = [3, 6]
 const MINIBOSS_ROOM := 4
 const BOSS_ROOM := 8
 
-# --- Djupgräns (US-1.3): segment låses upp med karaktärsnivå.
+# --- Djupgräns (US-1.3): segment låses upp med partynivå.
 # Gaten ligger vid checkpoints så att en run alltid kan avslutas snyggt:
-# rum 1-3 alltid, rum 4-6 kräver nivå 2, rum 7-8 kräver nivå 4.
-const DEPTH_LEVEL_GATES := {4: 2, 7: 4}
+# rum 1-3 alltid, rum 4-6 kräver nivå 3, rum 7-8 kräver nivå 5.
+# Simuleringsdata: färska partyn wipade 50/50 mot minibossen på nivå 2 –
+# gaten tvingar run 1 att sluta med en bankning vid checkpoint 1 i stället.
+const DEPTH_LEVEL_GATES := {4: 3, 7: 5}
 
 
 static func required_level_for_depth(depth: int) -> int:
@@ -60,7 +62,7 @@ const HERO_MANA_REGEN := 2
 
 # --- Level och klassning (US-4.2) ---
 const XP_PER_LEVEL_BASE := 40
-const XP_LEVEL_GROWTH := 1.55
+const XP_LEVEL_GROWTH := 1.45  # fler nivåer = fler klassval (party-pivotens kärna)
 const CLASS_UNLOCK_PICKS := 3  # val i samma riktning innan klassidentitet
 
 
