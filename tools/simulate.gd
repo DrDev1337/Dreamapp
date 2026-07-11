@@ -11,7 +11,13 @@ extends SceneTree
 ##  - Hubb: köper billigaste permanenta uppgraderingen tills råd saknas.
 
 const RUNS := 100
+const FRESH_RUNS := 50
 const PREFERRED_AXIS := "fighter"
+
+# "casual"-policyn efterliknar en ny spelare: bara basattack, första
+# bästa mål, ingen healer-prioritering.
+var casual_mode := false
+var early_outcomes: Array = []  # run-för-run för de 10 första progressionsrunsen
 
 var outcome_counts := {}
 var death_by_depth := {}
@@ -31,17 +37,49 @@ func _init() -> void:
 	var character := CharacterState.new()
 	character.character_name = "Sim"
 	for run_index in RUNS:
-		_play_run(character, 10_000 + run_index)
+		var before_level := character.level
+		var outcome := _play_run(character, 10_000 + run_index)
 		_hub_shopping(character)
-		var decile := run_index / 10
-		banked_by_decile[decile] = int(banked_by_decile.get(decile, 0))
+		if run_index < 10:
+			early_outcomes.append(
+				"run %d: %s (nivå %d->%d)" % [run_index + 1, outcome, before_level, character.level]
+			)
 		if run_index + 1 in [10, 25, 50, 100]:
 			level_at_milestone[run_index + 1] = character.level
 	_print_report(character)
+	_simulate_fresh_cohort(false)
+	_simulate_fresh_cohort(true)
 	quit(0)
 
 
-func _play_run(character: CharacterState, seed_value: int) -> void:
+## Färska karaktärer utan meta-progression: mäter run 1-upplevelsen.
+func _simulate_fresh_cohort(casual: bool) -> void:
+	casual_mode = casual
+	var depth_reached := {}
+	var deaths := 0
+	for i in FRESH_RUNS:
+		var character := CharacterState.new()
+		var outcome := _play_run(character, 50_000 + i + (100_000 if casual else 0))
+		var depth := 0
+		for part in outcome.split("_"):
+			if part.begins_with("d") and part.substr(1).is_valid_int():
+				depth = int(part.substr(1))
+		if outcome == "boss_clear":
+			depth = 8
+		elif outcome.begins_with("death"):
+			deaths += 1
+		depth_reached[depth] = int(depth_reached.get(depth, 0)) + 1
+	casual_mode = false
+	var label := "CASUAL" if casual else "OPTIMAL"
+	print("=== FÄRSK KARAKTÄR (%d runs, %s AI) ===" % [FRESH_RUNS, label])
+	print("  döda: %d av %d" % [deaths, FRESH_RUNS])
+	var depths := depth_reached.keys()
+	depths.sort()
+	for depth in depths:
+		print("  slutdjup %d: %d" % [depth, depth_reached[depth]])
+
+
+func _play_run(character: CharacterState, seed_value: int) -> String:
 	var run := RunState.start(character, seed_value)
 	var had_pile := character.has_death_pile()
 	var banked_before := character.banked_essence
@@ -82,7 +120,7 @@ func _play_run(character: CharacterState, seed_value: int) -> void:
 				piles_created += 1
 			death_by_depth[run.current_depth] = int(death_by_depth.get(run.current_depth, 0)) + 1
 			death_room_types[room["type"]] = int(death_room_types.get(room["type"], 0)) + 1
-			outcome = "death"
+			outcome = "death_d%d" % run.current_depth
 			break
 		if is_elite:
 			elite_stats[room["type"]][1] += 1
@@ -90,10 +128,9 @@ func _play_run(character: CharacterState, seed_value: int) -> void:
 		outcome = "safety_stop"
 	outcome_counts[outcome] = int(outcome_counts.get(outcome, 0)) + 1
 	essence_banked_total += character.banked_essence - banked_before
-	if had_pile and not character.has_death_pile():
-		pass  # räknat via piles_recovered
-	if outcome == "death" and character.has_death_pile():
-		pass
+	if had_pile:
+		pass  # högar räknas via piles_created/piles_recovered
+	return outcome
 
 
 ## Returnerar true vid seger.
@@ -133,6 +170,8 @@ func _play_combat(run: RunState, character: CharacterState) -> bool:
 
 func _choose_action(combat: CombatEngine) -> Array:
 	var alive := combat.living_enemies()
+	if casual_mode:
+		return ["basic_attack", alive[0]]
 	var target: int = alive[0]
 	var lowest_hp := 999999
 	for i in alive:
@@ -199,6 +238,9 @@ func _hub_shopping(character: CharacterState) -> void:
 
 func _print_report(character: CharacterState) -> void:
 	print("=== SIMULERING: %d runs ===" % RUNS)
+	print("--- De 10 första runsen ---")
+	for line in early_outcomes:
+		print("  " + line)
 	print("--- Utfall ---")
 	var keys := outcome_counts.keys()
 	keys.sort()
