@@ -36,8 +36,9 @@ func build() -> void:
 		Game.mark_tutorial_seen("combat_intro")
 		var hint := (
 			"Combat is turn-based – every hero acts once per round. "
-			+ "Tap an enemy to pick a target, then tap an ability. "
-			+ "Melee enemies can only reach your front row."
+			+ "Tap an enemy to choose your TARGET, then tap an ability. "
+			+ "Red text under a hero shows who the enemies plan to strike, "
+			+ "and melee enemies can only reach your front row."
 		)
 		UIKit.popup(self, "Combat", hint)
 
@@ -117,6 +118,15 @@ func _make_enemy_widget(index: int) -> Dictionary:
 	var info_label := UIKit.body("", 11)
 	info_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(info_label)
+	# Tydligt målval: "TARGET"-strip under den valda fienden.
+	var target_strip := Label.new()
+	target_strip.text = "TARGET"
+	target_strip.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	target_strip.add_theme_font_override("font", UIKit.FONT_BOLD)
+	target_strip.add_theme_font_size_override("font_size", 11)
+	target_strip.add_theme_color_override("font_color", UIKit.COLOR_ACCENT)
+	target_strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(target_strip)
 	button.add_child(box)
 	button.pressed.connect(
 		func():
@@ -131,6 +141,7 @@ func _make_enemy_widget(index: int) -> Dictionary:
 		"intent_row": intent_row,
 		"intent_icon": intent_icon,
 		"intent_label": intent_label,
+		"target_strip": target_strip,
 	}
 
 
@@ -150,6 +161,12 @@ func _make_hero_widget(index: int) -> Dictionary:
 	var info_label := UIKit.body("", 10)
 	info_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(info_label)
+	# Hotvisning: vem fienderna tänker slå och för ungefär hur mycket.
+	var threat_label := UIKit.body("", 10)
+	threat_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	threat_label.add_theme_font_override("font", UIKit.FONT_BOLD)
+	threat_label.add_theme_color_override("font_color", UIKit.COLOR_HP)
+	box.add_child(threat_label)
 	panel.add_child(box)
 	return {
 		"panel": panel,
@@ -157,6 +174,7 @@ func _make_hero_widget(index: int) -> Dictionary:
 		"hp_bar": hp_bar,
 		"mana_bar": mana_bar,
 		"info_label": info_label,
+		"threat_label": threat_label,
 	}
 
 
@@ -195,18 +213,24 @@ func _refresh(animate: bool) -> void:
 
 	order_label.text = "Round %d" % engine.round_number
 
+	# Hot per hjälte: summera vad fienderna planerar att slå dem för.
+	var incoming := {}
 	for i in enemy_widgets.size():
 		var enemy: Dictionary = engine.enemies[i]
 		var widget: Dictionary = enemy_widgets[i]
 		var dead: bool = enemy["hp"] <= 0
 		var button: Button = widget["button"]
+		var selected: bool = i == selected_target and not dead
 		button.disabled = dead
 		button.modulate = Color(1, 1, 1, 0.35) if dead else Color.WHITE
-		var mark := "» " if i == selected_target and not dead else ""
+		widget["target_strip"].visible = selected and not engine.is_over()
 		var phase_mark := (
 			"  [PHASE 2]" if enemy.get("is_boss", false) and int(enemy.get("phase", 1)) == 2 else ""
 		)
-		widget["name_label"].text = "%s%s%s" % [mark, enemy["name"], phase_mark]
+		widget["name_label"].text = "%s%s" % [enemy["name"], phase_mark]
+		widget["name_label"].add_theme_color_override(
+			"font_color", UIKit.COLOR_ACCENT if selected else Color("e8e4f0")
+		)
 		_set_bar(widget["hp_bar"], int(enemy["hp"]), int(enemy["max_hp"]), animate)
 		widget["info_label"].text = (
 			"%d/%d %s" % [int(enemy["hp"]), int(enemy["max_hp"]), _status_text(enemy)]
@@ -221,6 +245,11 @@ func _refresh(animate: bool) -> void:
 			widget["intent_icon"].modulate = tint
 			widget["intent_label"].text = String(intent.get("label", ""))
 			widget["intent_label"].add_theme_color_override("font_color", tint)
+			var threat_target := int(intent.get("target", -1))
+			if threat_target >= 0:
+				incoming[threat_target] = (
+					int(incoming.get(threat_target, 0)) + int(intent.get("est", 0))
+				)
 
 	for i in hero_widgets.size():
 		var hero: Dictionary = engine.heroes[i]
@@ -239,6 +268,10 @@ func _refresh(animate: bool) -> void:
 			"DOWN"
 			if down
 			else "%s %d/%d %s" % [row_tag, int(hero["hp"]), int(hero["max_hp"]), _status_text(hero)]
+		)
+		var threat := int(incoming.get(i, 0))
+		widget["threat_label"].text = (
+			"next hit ~%d" % threat if threat > 0 and not down and not engine.is_over() else ""
 		)
 
 	log_label.text = "\n".join(engine.log.slice(maxi(0, engine.log.size() - 5)))

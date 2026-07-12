@@ -140,6 +140,9 @@ static func bar(value: int, max_value: int, color: Color, height := 26) -> Progr
 	bar_node.max_value = max_value
 	bar_node.value = value
 	bar_node.show_percentage = false
+	# Bars är ren visning – utan IGNORE äter de tryck på knappen bakom
+	# (ProgressBar har mouse_filter STOP som default).
+	bar_node.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bar_node.custom_minimum_size = Vector2(0, height)
 	var fill := StyleBoxFlat.new()
 	fill.bg_color = color

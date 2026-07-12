@@ -423,9 +423,10 @@ func _attack_intent(enemy: Dictionary, mult: float, kind: String) -> Dictionary:
 			label = "Heavy %s ~%d" % [target_name, est]
 		"double":
 			label = "2 hits %s ~%d" % [target_name, est]
+			est *= 2
 		_:
 			label = "Attack %s ~%d" % [target_name, est]
-	return {"kind": kind, "label": label, "target": target}
+	return {"kind": kind, "label": label, "target": target, "est": est}
 
 
 ## Melee når bara frontraden (om någon lever); taunt tvingar målet.

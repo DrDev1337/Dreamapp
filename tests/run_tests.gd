@@ -142,6 +142,7 @@ func test_party_targeting_and_support() -> void:
 	var intent: Dictionary = engine.enemies[0]["intent"]
 	check(int(intent["target"]) in [0, 1], "melee-fiende siktar på frontraden")
 	check(String(intent["label"]).contains("Hero"), "intentionen namnger hjältemålet")
+	check(int(intent.get("est", 0)) > 0, "intentionen bär skadeuppskattning (hotvisning i UI)")
 
 	# Taunt från bakre raden tvingar om fiendens mål.
 	var heroes := _make_party_combat()
@@ -227,6 +228,11 @@ func test_hero_and_classing() -> void:
 	var party := PartyState.create(["Ask", "Embla", "Runa", "Grim", "Saga"])
 	check(party.heroes.size() == Balance.PARTY_SIZE, "nytt party har 5 hjältar")
 	check(party.hero_row(0) == "front" and party.hero_row(2) == "back", "rad 0-1 är frontrad")
+	# Startförmågor (fler val i början): specs med ability_id lärs direkt.
+	var talented := PartyState.create([{"name": "Tova", "ability_id": "taunt"}, "Grim"])
+	check("taunt" in talented.heroes[0].ability_ids, "startförmåga lärs vid party-skapande")
+	check(talented.heroes[1].ability_ids == ["basic_attack"], "namn-endast-specs fungerar kvar")
+	check(talented.party_name == "Tova", "partyt namnges efter första hjälten")
 	var levels := party.gain_xp(Balance.xp_for_level(1))
 	check(levels == 1 and party.level == 2, "party-XP ger level up")
 	var rng := RandomNumberGenerator.new()

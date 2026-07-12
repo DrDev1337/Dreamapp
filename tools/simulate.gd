@@ -17,7 +17,14 @@ extends SceneTree
 const RUNS := 100
 const FRESH_RUNS := 50
 const DESIRED_AXES := ["tank", "rogue", "healer", "mage", "mage"]
-const SIM_NAMES := ["Sim1", "Sim2", "Sim3", "Sim4", "Sim5"]
+# Speglar party-pickern: varje rekryt startar med en förmåga (en per axel).
+const SIM_SPECS := [
+	{"name": "Sim1", "ability_id": "taunt"},
+	{"name": "Sim2", "ability_id": "backstab"},
+	{"name": "Sim3", "ability_id": "mend"},
+	{"name": "Sim4", "ability_id": "firebolt"},
+	{"name": "Sim5", "ability_id": "frost_nova"},
+]
 
 var casual_mode := false
 var early_outcomes: Array = []  # run-för-run för de 10 första progressionsrunsen
@@ -37,7 +44,7 @@ var stuck_fights := 0
 
 
 func _init() -> void:
-	var party := PartyState.create(SIM_NAMES)
+	var party := PartyState.create(SIM_SPECS)
 	for run_index in RUNS:
 		var before_level := party.level
 		var outcome := _play_run(party, 10_000 + run_index)
@@ -60,7 +67,7 @@ func _simulate_fresh_cohort(casual: bool) -> void:
 	var depth_reached := {}
 	var deaths := 0
 	for i in FRESH_RUNS:
-		var party := PartyState.create(SIM_NAMES)
+		var party := PartyState.create(SIM_SPECS)
 		var outcome := _play_run(party, 50_000 + i + (100_000 if casual else 0))
 		var depth := 0
 		for part in outcome.split("_"):

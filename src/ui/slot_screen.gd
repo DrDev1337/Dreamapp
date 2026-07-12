@@ -30,7 +30,7 @@ const NAMES := [
 ]
 
 var creating_slot := -1
-var suggested_names: Array = []
+var suggested_specs: Array = []  # [{name, ability_id, axis}, ...]
 
 
 func build() -> void:
@@ -107,21 +107,30 @@ func _build_party_picker() -> void:
 	add_child(UIKit.vmargin(layout))
 	layout.add_child(UIKit.spacer(40))
 	layout.add_child(UIKit.title("New party", 38))
-	layout.add_child(UIKit.body("Five level 1 recruits. Their choices will shape them.", 16))
+	layout.add_child(
+		UIKit.body("Five level 1 recruits, each with one starting talent to build on.", 16)
+	)
 	layout.add_child(UIKit.spacer(6))
 
 	var name_panel := UIKit.panel()
 	var name_box := VBoxContainer.new()
-	name_box.add_theme_constant_override("separation", 6)
-	for i in suggested_names.size():
+	name_box.add_theme_constant_override("separation", 8)
+	for i in suggested_specs.size():
+		var spec: Dictionary = suggested_specs[i]
+		var ability := Abilities.get_ability(String(spec["ability_id"]))
 		var row_label := UIKit.body(
-			"%d. %s%s" % [i + 1, suggested_names[i], "   (front row)" if i < 2 else ""], 20
+			"%d. %s%s" % [i + 1, spec["name"], "   (front row)" if i < 2 else ""], 20
 		)
+		var talent_label := UIKit.body(
+			"      knows %s – %s" % [ability["name"], ability["desc"]], 13
+		)
+		talent_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.65))
 		name_box.add_child(row_label)
+		name_box.add_child(talent_label)
 	name_panel.add_child(name_box)
 	layout.add_child(name_panel)
 
-	var reroll_button := UIKit.big_button("Reroll names", 80)
+	var reroll_button := UIKit.big_button("Reroll party", 80)
 	reroll_button.pressed.connect(
 		func():
 			_roll_names()
@@ -136,7 +145,7 @@ func _build_party_picker() -> void:
 	var create_button := UIKit.primary_button("Begin the descent", 104)
 	create_button.pressed.connect(
 		func():
-			Game.create_party(creating_slot, suggested_names)
+			Game.create_party(creating_slot, suggested_specs)
 			main.show_hub()
 	)
 	layout.add_child(create_button)
@@ -156,10 +165,28 @@ func _start_creating(slot: int) -> void:
 	rebuild()
 
 
+## Rullar namn + en startförmåga per rekryt: de fyra axlarna täcks
+## alltid, femte hjälten får en slumpad axel. Reroll ger nya kombon.
 func _roll_names() -> void:
 	var pool := NAMES.duplicate()
 	pool.shuffle()
-	suggested_names = pool.slice(0, Balance.PARTY_SIZE)
+	var axes: Array = Abilities.AXES.duplicate()
+	axes.append(Abilities.AXES[randi_range(0, Abilities.AXES.size() - 1)])
+	axes.shuffle()
+	suggested_specs = []
+	for i in Balance.PARTY_SIZE:
+		var axis: String = axes[i]
+		var options := Abilities.abilities_for_axis(axis)
+		(
+			suggested_specs
+			. append(
+				{
+					"name": pool[i],
+					"axis": axis,
+					"ability_id": options[randi_range(0, options.size() - 1)],
+				}
+			)
+		)
 
 
 func _select(slot: int) -> void:

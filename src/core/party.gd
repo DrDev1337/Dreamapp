@@ -18,13 +18,21 @@ var runs_completed := 0
 var deaths := 0  # partywipes
 
 
-static func create(hero_names: Array) -> PartyState:
+## Skapar ett party. Varje element är en String (bara namn) eller en
+## Dictionary {name, ability_id} – startförmågan ger val från strid 1.
+static func create(hero_specs: Array) -> PartyState:
 	var party := PartyState.new()
-	party.party_name = String(hero_names[0]) if not hero_names.is_empty() else "Party"
-	for name in hero_names:
+	for spec in hero_specs:
 		var hero := Hero.new()
-		hero.hero_name = String(name)
+		if spec is Dictionary:
+			hero.hero_name = String(spec.get("name", "Hero"))
+			var ability_id := String(spec.get("ability_id", ""))
+			if ability_id != "":
+				hero.learn_ability(ability_id)
+		else:
+			hero.hero_name = String(spec)
 		party.heroes.append(hero)
+	party.party_name = party.heroes[0].hero_name if not party.heroes.is_empty() else "Party"
 	return party
 
 

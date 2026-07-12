@@ -34,7 +34,8 @@ behålls oförändrad – partyt ersätter bara hjälten som farkost.
 
 ## Roller och klassning (4 axlar)
 
-Alla hjältar startar med enbart basattack. Vid party-level-up väljs **en**
+Alla rekryter rullas med **en startförmåga** (en per axel täcks alltid; reroll ger
+nya kombon) – det ger riktiga val redan i strid 1. Vid party-level-up väljs **en**
 uppgradering: 3 alternativ, kopplade till tre olika hjältar. Två val åt samma håll
 på samma hjälte låser klassidentitet + signaturförmåga (var tre, men simuleringen
 visade att bara 2 av 5 klasser hann låsas på 100 runs – combon uppstod aldrig).

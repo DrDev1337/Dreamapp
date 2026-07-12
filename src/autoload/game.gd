@@ -26,8 +26,8 @@ func _ready() -> void:
 # --- Slots och partyn (US-4.4) ---
 
 
-func create_party(slot: int, hero_names: Array) -> void:
-	party = PartyState.create(hero_names)
+func create_party(slot: int, hero_specs: Array) -> void:
+	party = PartyState.create(hero_specs)
 	active_slot = slot
 	run = null
 	save_game()
