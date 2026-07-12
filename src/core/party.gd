@@ -11,8 +11,9 @@ var xp := 0
 var banked_essence := 0
 var permanent_upgrades := {}
 var pending_boosts: Array = []
-var death_pile := {}  # {depth, essence, loot: []} – max en aktiv hög (US-2.5)
+var death_pile := {}  # {depth, essence, loot, dungeon_id} – max en aktiv hög (US-2.5)
 var bosses_defeated := 0
+var dungeon_clears := {}  # dungeon_id -> antal bossar besegrade där
 var tutorial_flags := {}
 var runs_completed := 0
 var deaths := 0  # partywipes
@@ -63,6 +64,10 @@ func hero_row(index: int) -> String:
 	return "front" if index < Balance.FRONT_ROW_SIZE else "back"
 
 
+func clears_of(dungeon_id: String) -> int:
+	return int(dungeon_clears.get(dungeon_id, 0))
+
+
 func to_dict() -> Dictionary:
 	return {
 		"party_name": party_name,
@@ -74,6 +79,7 @@ func to_dict() -> Dictionary:
 		"pending_boosts": pending_boosts,
 		"death_pile": death_pile,
 		"bosses_defeated": bosses_defeated,
+		"dungeon_clears": dungeon_clears,
 		"tutorial_flags": tutorial_flags,
 		"runs_completed": runs_completed,
 		"deaths": deaths,
@@ -92,6 +98,7 @@ static func from_dict(data: Dictionary) -> PartyState:
 	party.pending_boosts = data.get("pending_boosts", [])
 	party.death_pile = data.get("death_pile", {})
 	party.bosses_defeated = int(data.get("bosses_defeated", 0))
+	party.dungeon_clears = data.get("dungeon_clears", {})
 	party.tutorial_flags = data.get("tutorial_flags", {})
 	party.runs_completed = int(data.get("runs_completed", 0))
 	party.deaths = int(data.get("deaths", 0))

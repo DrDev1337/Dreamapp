@@ -9,6 +9,7 @@ extends RefCounted
 ## utslagna tills en checkpoint väcker upp dem.
 
 var rooms: Array = []
+var dungeon_id: String = Dungeons.DEFAULT
 var current_depth := 0  # 0 = inte inne i något rum än
 var carried_essence := 0
 var unsecured_items: Array = []  # utrustade denna run, tappas vid wipe (US-5.2)
@@ -21,12 +22,21 @@ var finished := false
 
 
 ## Startar en ny run (US-1.1). Pending boosts aktiveras och förbrukas.
-static func start(party: PartyState, seed_value: int) -> RunState:
+static func start(
+	party: PartyState, seed_value: int, run_dungeon_id: String = Dungeons.DEFAULT
+) -> RunState:
 	var run := RunState.new()
+	run.dungeon_id = run_dungeon_id
 	run.rng.seed = seed_value
 	run.active_boosts = party.pending_boosts.duplicate(true)
 	party.pending_boosts = []
-	var pile_depth := int(party.death_pile.get("depth", -1)) if party.has_death_pile() else -1
+	# Dödshögen ligger i en specifik dungeon – bara runs där kan nå den.
+	var pile_depth := -1
+	if (
+		party.has_death_pile()
+		and String(party.death_pile.get("dungeon_id", Dungeons.DEFAULT)) == run_dungeon_id
+	):
+		pile_depth = int(party.death_pile.get("depth", -1))
 	run.rooms = RunGenerator.generate(run.rng, pile_depth)
 	run.heroes_combat = []
 	for i in party.heroes.size():
@@ -45,22 +55,36 @@ func current_room() -> Dictionary:
 	return {}
 
 
-## US-1.3: djupgräns kopplad till partynivå.
+func dungeon() -> Dictionary:
+	return Dungeons.get_dungeon(dungeon_id)
+
+
+## Djupet som matas in i fiende-/loot-skalningen: senare dungeons
+## fortsätter kurvan där den förra slutade.
+func effective_depth(depth: int) -> int:
+	return depth + int(dungeon()["depth_offset"])
+
+
+## US-1.3: djupgräns kopplad till partynivå. Grindarna är per dungeon.
 func max_reachable_depth(party: PartyState) -> int:
-	return Balance.max_depth_for_level(party.level)
+	return Balance.max_depth_for_level(party.level, dungeon()["gates"])
+
+
+func required_level_for(depth: int) -> int:
+	return Balance.required_level_for_depth(depth, dungeon()["gates"])
 
 
 func can_go_deeper(party: PartyState) -> bool:
 	if current_depth >= rooms.size():
 		return false
-	return party.level >= Balance.required_level_for_depth(current_depth + 1)
+	return party.level >= required_level_for(current_depth + 1)
 
 
 ## Text till UI:t när djupet är låst (US-1.3: tydlig indikation).
 func deeper_lock_reason(party: PartyState) -> String:
 	if current_depth >= rooms.size():
 		return ""
-	var required := Balance.required_level_for_depth(current_depth + 1)
+	var required := required_level_for(current_depth + 1)
 	if party.level < required:
 		return "Party level %d required to go deeper (you are level %d)." % [required, party.level]
 	return ""
@@ -90,11 +114,11 @@ func enter_next_room(party: PartyState) -> Dictionary:
 	match String(room["type"]):
 		"chest":
 			var bonus_rarity := _has_boost("bonus_rarity")
-			event["chest_item"] = Items.generate(rng, current_depth, bonus_rarity)
+			event["chest_item"] = Items.generate(rng, effective_depth(current_depth), bonus_rarity)
 		_:
 			var enemy_list: Array = []
 			for id in room["enemy_ids"]:
-				enemy_list.append(Enemies.spawn(id, current_depth))
+				enemy_list.append(Enemies.spawn(id, effective_depth(current_depth)))
 			combat = CombatEngine.new()
 			combat.setup(heroes_combat, enemy_list, rng.randi())
 			# Kör fram till första hjältens tur – snabbare fiender slår först.
@@ -117,11 +141,13 @@ func on_combat_victory(party: PartyState) -> Dictionary:
 	var was_boss: bool = room["type"] == "boss"
 	var was_elite: bool = was_boss or room["type"] == "miniboss"
 	if was_elite:
-		loot = Items.generate(rng, current_depth, true, "epic" if was_boss else "")
+		loot = Items.generate(rng, effective_depth(current_depth), true, "epic" if was_boss else "")
 	elif rng.randf() < Balance.LOOT_DROP_CHANCE_NORMAL:
-		loot = Items.generate(rng, current_depth, _has_boost("bonus_rarity"))
+		loot = Items.generate(rng, effective_depth(current_depth), _has_boost("bonus_rarity"))
 	if was_boss:
 		party.bosses_defeated += 1
+		# Boss-kill räknas per dungeon och låser upp nästa (Dungeons).
+		party.dungeon_clears[dungeon_id] = party.clears_of(dungeon_id) + 1
 	# HP/mana följer med till nästa rum; stridsstatusar och cooldowns nollas.
 	heroes_combat = combat.heroes
 	for hero_combat in heroes_combat:
@@ -215,6 +241,7 @@ func on_death(party: PartyState) -> Dictionary:
 			"depth": current_depth,
 			"essence": carried_essence,
 			"loot": unsecured_items.duplicate(true),
+			"dungeon_id": dungeon_id,
 		}
 	party.deaths += 1
 	var summary := {
@@ -268,6 +295,7 @@ func _has_boost(key: String) -> bool:
 func to_dict() -> Dictionary:
 	return {
 		"rooms": rooms,
+		"dungeon_id": dungeon_id,
 		"current_depth": current_depth,
 		"carried_essence": carried_essence,
 		"unsecured_items": unsecured_items,
@@ -284,6 +312,7 @@ func to_dict() -> Dictionary:
 static func from_dict(data: Dictionary) -> RunState:
 	var run := RunState.new()
 	run.rooms = data["rooms"]
+	run.dungeon_id = String(data.get("dungeon_id", Dungeons.DEFAULT))
 	run.current_depth = int(data["current_depth"])
 	run.carried_essence = int(data["carried_essence"])
 	run.unsecured_items = data["unsecured_items"]

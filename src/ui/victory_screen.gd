@@ -32,6 +32,18 @@ func build() -> void:
 	panel.add_child(box)
 	layout.add_child(panel)
 
+	# Progression: berätta när en ny dungeon just blivit nåbar.
+	for id in Dungeons.ORDER:
+		if party.clears_of(id) == 0 and Dungeons.is_unlocked(party, id):
+			var unlock_panel := UIKit.panel(Color("2a2440"))
+			var unlock_label := UIKit.body(
+				"A deeper place calls: %s is open." % Dungeons.get_dungeon(id)["name"], 17
+			)
+			unlock_label.add_theme_color_override("font_color", UIKit.COLOR_ACCENT)
+			unlock_panel.add_child(unlock_label)
+			layout.add_child(unlock_panel)
+			break
+
 	var filler := Control.new()
 	filler.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	layout.add_child(filler)

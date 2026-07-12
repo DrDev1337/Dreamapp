@@ -137,8 +137,8 @@ func resume_or_hub() -> void:
 # --- Spelflöde ---
 
 
-func begin_run() -> void:
-	Game.start_run()
+func begin_run(dungeon_id: String = Dungeons.DEFAULT) -> void:
+	Game.start_run(dungeon_id)
 	show_run()
 
 

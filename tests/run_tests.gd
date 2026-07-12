@@ -23,6 +23,7 @@ func _init() -> void:
 	test_enemy_intents()
 	test_hero_and_classing()
 	test_run_generation()
+	test_dungeons()
 	test_essence_death_and_recovery()
 	test_upgrades()
 	test_items()
@@ -269,6 +270,53 @@ func test_run_generation() -> void:
 	rng2.seed = 999
 	var other := RunGenerator.generate(rng2)
 	check(other[7]["type"] == "boss", "fasta regler gäller oavsett seed")
+
+
+func test_dungeons() -> void:
+	print("Dungeons…")
+	var party := PartyState.create(["A", "B", "C", "D", "E"])
+	check(Dungeons.ORDER.size() >= 3, "minst 3 dungeons i progressionen")
+	check(Dungeons.is_unlocked(party, "cave_depths"), "första dungeonen är alltid öppen")
+	check(not Dungeons.is_unlocked(party, "sunken_crypt"), "dungeon 2 är låst från start")
+	check(Dungeons.lock_reason(party, "sunken_crypt") != "", "låst dungeon förklarar varför")
+	party.level = 6
+	check(not Dungeons.is_unlocked(party, "sunken_crypt"), "nivå räcker inte utan boss-kill")
+	party.dungeon_clears["cave_depths"] = 1
+	check(Dungeons.is_unlocked(party, "sunken_crypt"), "boss-kill + nivå låser upp dungeon 2")
+	check(not Dungeons.is_unlocked(party, "ember_halls"), "dungeon 3 kräver mer")
+	check(Dungeons.highest_unlocked(party) == "sunken_crypt", "djupaste öppna föreslås")
+
+	# Svårare dungeon = starkare fiender och högre belöningar (samma kurva).
+	party.level = 20
+	var crypt_run := RunState.start(party, 7, "sunken_crypt")
+	check(crypt_run.effective_depth(1) == 9, "dungeon 2 fortsätter djupkurvan (offset 8)")
+	crypt_run.enter_next_room(party)
+	check(
+		int(crypt_run.combat.enemies[0]["max_hp"]) > 50,
+		"fiender i dungeon 2 är rejält starkare än djup 1"
+	)
+	check(crypt_run.required_level_for(4) == 8, "dungeon 2 har egna nivågrindar")
+
+	# Dungeon-id överlever save/resume.
+	var resumed := RunState.from_dict(JSON.parse_string(JSON.stringify(crypt_run.to_dict())))
+	check(resumed.dungeon_id == "sunken_crypt", "dungeon-id överlever resume")
+
+	# Dödshögen är dungeonbunden: nås bara av runs i samma dungeon.
+	crypt_run.current_depth = 2
+	crypt_run.carried_essence = 60
+	crypt_run.on_death(party)
+	check(String(party.death_pile["dungeon_id"]) == "sunken_crypt", "högen minns sin dungeon")
+	var cave_run := RunState.start(party, 8, "cave_depths")
+	var cave_has_pile := false
+	for room in cave_run.rooms:
+		if room.get("has_pile", false):
+			cave_has_pile = true
+	check(not cave_has_pile, "högen dyker inte upp i fel dungeon")
+	var crypt_run2 := RunState.start(party, 9, "sunken_crypt")
+	check(crypt_run2.rooms[1]["has_pile"], "högen ligger kvar i rätt dungeon")
+
+	# Boss-kill i en run registreras på runnens dungeon.
+	check(party.clears_of("sunken_crypt") == 0, "inga crypt-clears än")
 
 
 func test_essence_death_and_recovery() -> void:

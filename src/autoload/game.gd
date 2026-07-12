@@ -78,10 +78,10 @@ func has_active_run() -> bool:
 	return run != null and not run.finished
 
 
-func start_run() -> void:
+func start_run(dungeon_id: String = Dungeons.DEFAULT) -> void:
 	_run_seed_counter += 1
 	var seed_value := int(Time.get_unix_time_from_system()) + _run_seed_counter
-	run = RunState.start(party, seed_value)
+	run = RunState.start(party, seed_value, dungeon_id)
 	save_game()
 
 

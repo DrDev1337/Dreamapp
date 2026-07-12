@@ -16,18 +16,20 @@ const BOSS_ROOM := 8
 const DEPTH_LEVEL_GATES := {4: 3, 7: 5}
 
 
-static func required_level_for_depth(depth: int) -> int:
+# Grindarna kan bytas per dungeon (Dungeons.CATALOG) – defaulten är
+# första dungeonens.
+static func required_level_for_depth(depth: int, gates: Dictionary = DEPTH_LEVEL_GATES) -> int:
 	var required := 1
-	for gate_depth in DEPTH_LEVEL_GATES:
-		if depth >= gate_depth:
-			required = maxi(required, DEPTH_LEVEL_GATES[gate_depth])
+	for gate_depth in gates:
+		if depth >= int(gate_depth):
+			required = maxi(required, int(gates[gate_depth]))
 	return required
 
 
-static func max_depth_for_level(level: int) -> int:
+static func max_depth_for_level(level: int, gates: Dictionary = DEPTH_LEVEL_GATES) -> int:
 	var max_depth := 0
 	for depth in range(1, RUN_ROOM_COUNT + 1):
-		if level >= required_level_for_depth(depth):
+		if level >= required_level_for_depth(depth, gates):
 			max_depth = depth
 	return max_depth
 

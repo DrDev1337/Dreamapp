@@ -73,9 +73,9 @@ func _simulate_fresh_cohort(casual: bool) -> void:
 		for part in outcome.split("_"):
 			if part.begins_with("d") and part.substr(1).is_valid_int():
 				depth = int(part.substr(1))
-		if outcome == "boss_clear":
+		if outcome.ends_with("boss_clear"):
 			depth = 8
-		elif outcome.begins_with("death"):
+		elif outcome.contains("death"):
 			deaths += 1
 		depth_reached[depth] = int(depth_reached.get(depth, 0)) + 1
 	casual_mode = false
@@ -88,8 +88,12 @@ func _simulate_fresh_cohort(casual: bool) -> void:
 		print("  slutdjup %d: %d" % [depth, depth_reached[depth]])
 
 
+## Spelar en run i den djupaste upplåsta dungeonen. Utfall taggas med
+## tier ("t2_boss_clear") så progressionen genom dungeons syns i loggen.
 func _play_run(party: PartyState, seed_value: int) -> String:
-	var run := RunState.start(party, seed_value)
+	var dungeon_id := Dungeons.highest_unlocked(party)
+	var tier := int(Dungeons.get_dungeon(dungeon_id)["tier"])
+	var run := RunState.start(party, seed_value, dungeon_id)
 	var banked_before := party.banked_essence
 	var outcome := ""
 	var safety := 0
@@ -129,6 +133,7 @@ func _play_run(party: PartyState, seed_value: int) -> String:
 			elite_stats[room["type"]][1] += 1
 	if outcome == "":
 		outcome = "safety_stop"
+	outcome = "t%d_%s" % [tier, outcome]
 	outcome_counts[outcome] = int(outcome_counts.get(outcome, 0)) + 1
 	essence_banked_total += party.banked_essence - banked_before
 	return outcome
@@ -344,6 +349,7 @@ func _print_report(party: PartyState) -> void:
 	)
 	print("  Högar skapade: %d, återhämtade: %d" % [piles_created, piles_recovered])
 	print("  Nivå vid run 10/25/50/100: %s" % str(level_at_milestone))
+	print("  Dungeon-clears: %s" % str(party.dungeon_clears))
 	var classes: Array = []
 	for hero in party.heroes:
 		classes.append(hero.class_identity if hero.class_identity != "" else "-")

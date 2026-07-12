@@ -1,6 +1,8 @@
 extends ScreenBase
-## Hubben (US-8.1): roster, uppgraderingar och run-start.
+## Hubben (US-8.1): roster, dungeonval, uppgraderingar och run-start.
 ## US-1.1: "Start run" nås med max 2 tryck från appstart.
+
+var selected_dungeon := ""
 
 
 func build() -> void:
@@ -29,8 +31,12 @@ func build() -> void:
 		var pile_panel := UIKit.panel(Color("3a2a20"))
 		var pile_label := UIKit.body(
 			(
-				"Your lost Essence (%d) lies at depth %d. Reach it next run to reclaim it!"
-				% [int(pile.get("essence", 0)), int(pile.get("depth", 1))]
+				"Your lost Essence (%d) lies at depth %d in %s. Reach it to reclaim it!"
+				% [
+					int(pile.get("essence", 0)),
+					int(pile.get("depth", 1)),
+					Dungeons.get_dungeon(String(pile.get("dungeon_id", Dungeons.DEFAULT)))["name"]
+				]
 			),
 			15
 		)
@@ -47,9 +53,22 @@ func build() -> void:
 	roster_panel.add_child(roster_box)
 	layout.add_child(roster_panel)
 
+	# Dungeonval: nya, svårare dungeons låses upp av boss-kills.
+	if selected_dungeon == "" or not Dungeons.is_unlocked(party, selected_dungeon):
+		selected_dungeon = Dungeons.highest_unlocked(party)
+	var dungeon_panel := UIKit.panel()
+	var dungeon_box := VBoxContainer.new()
+	dungeon_box.add_theme_constant_override("separation", 6)
+	for id in Dungeons.ORDER:
+		dungeon_box.add_child(_dungeon_row(party, id))
+	dungeon_panel.add_child(dungeon_box)
+	layout.add_child(dungeon_panel)
+
 	layout.add_child(UIKit.spacer(4))
-	var start_button := UIKit.primary_button("START RUN", 104)
-	start_button.pressed.connect(main.begin_run)
+	var start_button := UIKit.primary_button(
+		"START RUN – %s" % Dungeons.get_dungeon(selected_dungeon)["name"], 104
+	)
+	start_button.pressed.connect(func(): main.begin_run(selected_dungeon))
 	layout.add_child(start_button)
 
 	var shop_button := UIKit.big_button("Upgrades", 76)
@@ -69,6 +88,29 @@ func build() -> void:
 				rebuild()
 		)
 		layout.add_child(iap_button)
+
+
+func _dungeon_row(party: PartyState, id: String) -> Control:
+	var dungeon := Dungeons.get_dungeon(id)
+	var unlocked := Dungeons.is_unlocked(party, id)
+	var selected: bool = id == selected_dungeon
+	var button := UIKit.big_button("", 62)
+	button.add_theme_font_size_override("font_size", 17)
+	if unlocked:
+		var clears := party.clears_of(id)
+		var status := "cleared x%d" % clears if clears > 0 else String(dungeon["tagline"])
+		button.text = "%s%s\n%s" % ["» " if selected else "", dungeon["name"], status]
+		if selected:
+			button.add_theme_color_override("font_color", UIKit.COLOR_ACCENT)
+		button.pressed.connect(
+			func():
+				selected_dungeon = id
+				rebuild()
+		)
+	else:
+		button.text = "%s\n%s" % [dungeon["name"], Dungeons.lock_reason(party, id)]
+		button.disabled = true
+	return button
 
 
 func _hero_row(party: PartyState, index: int) -> Control:

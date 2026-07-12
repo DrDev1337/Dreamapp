@@ -62,3 +62,18 @@ visade att bara 2 av 5 klasser hann låsas på 100 runs – combon uppstod aldri
 
 SAVE_VERSION höjs till 2. Äldre saves (solo) kasseras vid laddning – acceptabelt
 före release.
+
+## Dungeonprogression
+
+Spelet växer på djupet: **nya dungeons låses upp av boss-kills** (plus nivåkrav)
+och blir svårare och svårare. Varje dungeon återanvänder samma 8-rumsstruktur men
+med ett `depth_offset` som fortsätter fiende- och belöningskurvan där den förra
+dungeonen slutade – The Sunken Crypt börjar alltså på "djup 9", The Ember Halls
+på "djup 17". Nivågrindarna är dungeonspecifika och dödshögen är dungeonbunden:
+tappar man sin Essens i kryptan måste man tillbaka dit för att hämta den.
+
+| Dungeon | Tier | Kräver | Grindar (rum 4 / rum 7) |
+|---|---|---|---|
+| The Cave Depths | 1 | – | nivå 3 / 5 |
+| The Sunken Crypt | 2 | nivå 6 + Cave-boss | nivå 8 / 10 |
+| The Ember Halls | 3 | nivå 11 + Crypt-boss | nivå 13 / 15 |

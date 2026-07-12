@@ -11,7 +11,8 @@ func build() -> void:
 	layout.add_theme_constant_override("separation", 12)
 	add_child(UIKit.vmargin(layout))
 
-	layout.add_child(UIKit.title("Depth %d / %d" % [run.current_depth, run.rooms.size()], 30))
+	layout.add_child(UIKit.title(String(run.dungeon()["name"]), 26))
+	layout.add_child(UIKit.body("Depth %d / %d" % [run.current_depth, run.rooms.size()], 18))
 
 	var essence_label := UIKit.body("Carried Essence: %d  (unbanked!)" % run.carried_essence, 22)
 	essence_label.add_theme_color_override("font_color", UIKit.COLOR_ESSENCE)
@@ -45,9 +46,9 @@ func build() -> void:
 		)
 		var checkpoint_mark := "  · checkpoint after" if room.get("checkpoint_after", false) else ""
 		var lock_mark := ""
-		var locked: bool = party.level < Balance.required_level_for_depth(depth)
+		var locked: bool = party.level < run.required_level_for(depth)
 		if locked:
-			lock_mark = "  locked: level %d" % Balance.required_level_for_depth(depth)
+			lock_mark = "  locked: level %d" % run.required_level_for(depth)
 		var text_label := UIKit.body(
 			(
 				"%sDepth %d – %s%s%s%s"
