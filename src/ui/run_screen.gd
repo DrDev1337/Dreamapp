@@ -123,20 +123,13 @@ func build() -> void:
 
 
 func _confirm_abandon(run: RunState) -> void:
-	var dialog := ConfirmationDialog.new()
-	dialog.title = "Abandon run?"
+	var text := "You carry nothing – the run simply ends."
 	if run.carried_essence > 0 or not run.unsecured_items.is_empty():
-		dialog.dialog_text = (
+		text = (
 			"Abandoning counts as a wipe: your carried Essence (%d) and unbanked loot will be left at depth %d."
 			% [run.carried_essence, run.current_depth]
 		)
-	else:
-		dialog.dialog_text = "You carry nothing – the run simply ends."
-	dialog.ok_button_text = "Abandon"
-	dialog.cancel_button_text = "Keep going"
-	add_child(dialog)
-	dialog.popup_centered(Vector2i(560, 0))
-	dialog.confirmed.connect(main.abandon_run)
+	UIKit.confirm(self, "Abandon run?", text, "Abandon", main.abandon_run)
 
 
 func _chest_offer(item: Dictionary) -> Control:

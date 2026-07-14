@@ -35,10 +35,10 @@ func build() -> void:
 	if Game.should_show_tutorial("combat_intro"):
 		Game.mark_tutorial_seen("combat_intro")
 		var hint := (
-			"Combat is turn-based – every hero acts once per round. "
-			+ "Tap an enemy to choose your TARGET, then tap an ability. "
-			+ "Red text under a hero shows who the enemies plan to strike, "
-			+ "and melee enemies can only reach your front row."
+			"Every hero acts once per round, in any order you like - "
+			+ "tap a hero to act with them. Tap an enemy to choose your "
+			+ "TARGET, then tap an ability. Red text under a hero shows "
+			+ "who the enemies plan to strike."
 		)
 		UIKit.popup(self, "Combat", hint)
 
@@ -91,7 +91,7 @@ func _make_enemy_widget(index: int) -> Dictionary:
 	var enemy: Dictionary = engine.enemies[index]
 	var button := Button.new()
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	button.custom_minimum_size = Vector2(0, 138)
+	button.custom_minimum_size = Vector2(0, 158)
 	var box := VBoxContainer.new()
 	box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -102,7 +102,10 @@ func _make_enemy_widget(index: int) -> Dictionary:
 	intent_row.add_theme_constant_override("separation", 4)
 	var intent_icon := Icons.image(Icons.INTENT["attack"], 16)
 	intent_row.add_child(intent_icon)
-	var intent_label := UIKit.body("", 11)
+	var intent_label := UIKit.body("", 12)
+	# Autowrap i en HBox ger 1 tecken/rad – intentionen ska vara EN rad.
+	intent_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	intent_label.add_theme_font_override("font", UIKit.FONT_BOLD)
 	intent_row.add_child(intent_label)
 	box.add_child(intent_row)
 	var icon_texture: Texture2D = Icons.ENEMY.get(enemy["id"], Icons.SKULL)
@@ -149,6 +152,13 @@ func _make_hero_widget(index: int) -> Dictionary:
 	var hero: Dictionary = engine.heroes[index]
 	var panel := UIKit.panel()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# Tappbar: spelaren väljer vem som agerar på partyts tur.
+	panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	panel.gui_input.connect(
+		func(event):
+			if event is InputEventMouseButton and event.pressed:
+				_select_hero(index)
+	)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 2)
 	var name_label := UIKit.body(String(hero["name"]), 12)
@@ -256,7 +266,13 @@ func _refresh(animate: bool) -> void:
 		var widget: Dictionary = hero_widgets[i]
 		var down: bool = hero["hp"] <= 0
 		var is_active: bool = i == engine.active_hero
-		widget["panel"].modulate = Color(1, 1, 1, 0.35) if down else Color.WHITE
+		var acted: bool = i in engine.hero_acted
+		var tint := Color.WHITE
+		if down:
+			tint = Color(1, 1, 1, 0.35)
+		elif acted:
+			tint = Color(1, 1, 1, 0.55)
+		widget["panel"].modulate = tint
 		widget["name_label"].text = ("» " if is_active else "") + String(hero["name"])
 		widget["name_label"].add_theme_color_override(
 			"font_color", UIKit.COLOR_ACCENT if is_active else Color("e8e4f0")
@@ -278,7 +294,7 @@ func _refresh(animate: bool) -> void:
 
 	var active := engine.active_hero
 	if active >= 0 and not engine.is_over():
-		turn_label.text = "%s's turn" % engine.heroes[active]["name"]
+		turn_label.text = "%s's turn  ·  tap a hero to swap" % engine.heroes[active]["name"]
 	else:
 		turn_label.text = ""
 
@@ -317,6 +333,11 @@ func _set_bar(bar: ProgressBar, value: int, max_value: int, animate: bool) -> vo
 		create_tween().tween_property(bar, "value", value, 0.3).set_ease(Tween.EASE_OUT)
 	else:
 		bar.value = value
+
+
+func _select_hero(index: int) -> void:
+	if engine != null and engine.select_actor(index):
+		_refresh(false)
 
 
 func _use_ability(ability_id: String) -> void:

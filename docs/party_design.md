@@ -22,7 +22,10 @@ behålls oförändrad – partyt ersätter bara hjälten som farkost.
 ## Strid
 
 - Turordning per fart, hjältar och fiender interfolierade. Varje levande hjälte
-  agerar exakt en gång per runda; UI:t markerar vems tur det är.
+  agerar exakt en gång per runda – men spelaren väljer **fritt vilken hjälte**
+  som tar varje partytur (tappa hjältepanelen). Fart avgör bara NÄR partyts
+  turer infaller relativt fienderna. Statuseffekter på hjältar tickar vid
+  rundstart; en stunnad hjälte förlorar rundans handling.
 - Fiende-intentioner planeras vid rundstart och visar nu även **vilken hjälte**
   fienden tänker slå ("Attack Ylva ~7") – det taktiska pusslet.
 - **Hjältedöd ≠ förlust:** en hjälte på 0 HP är utslagen (resten av striden och

@@ -195,14 +195,11 @@ func _select(slot: int) -> void:
 
 
 func _confirm_delete(slot: int) -> void:
-	var dialog := ConfirmationDialog.new()
-	dialog.title = "Delete party?"
-	dialog.dialog_text = "All progress for this party will be lost permanently."
-	dialog.ok_button_text = "Delete"
-	dialog.cancel_button_text = "Cancel"
-	add_child(dialog)
-	dialog.popup_centered()
-	dialog.confirmed.connect(
+	UIKit.confirm(
+		self,
+		"Delete party?",
+		"All progress for this party will be lost permanently.",
+		"Delete",
 		func():
 			Game.delete_slot(slot)
 			rebuild()

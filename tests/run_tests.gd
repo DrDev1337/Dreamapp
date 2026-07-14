@@ -123,6 +123,28 @@ func test_combat_victory_and_defeat() -> void:
 			break
 	check(actors == [0, 1, 2, 3, 4], "varje hjälte agerar exakt en gång per runda")
 
+	# Fri ordning: spelaren väljer vem som tar partyts tur.
+	var order_engine := CombatEngine.new()
+	order_engine.setup(_make_party_combat(), [Enemies.spawn("stone_golem", 1)], 44)
+	order_engine.advance_until_player_turn()
+	check(order_engine.select_actor(3), "valfri hjälte kan ta partyts tur")
+	check(order_engine.active_hero == 3, "vald hjälte blir aktiv")
+	order_engine.player_action("basic_attack", 0)
+	check(3 in order_engine.hero_acted, "handlingen bokförs på vald hjälte")
+	order_engine.advance_until_player_turn()
+	check(not order_engine.select_actor(3), "samma hjälte kan inte agera två gånger per runda")
+	var first_round := order_engine.round_number
+	var safety_order := 0
+	while order_engine.round_number == first_round and not order_engine.is_over():
+		order_engine.player_action("basic_attack", 0)
+		safety_order += 1
+		if safety_order > 10:
+			break
+	check(
+		order_engine.round_number == 2 and order_engine.hero_acted.is_empty(),
+		"ny runda nollställer vem som agerat"
+	)
+
 	var doomed := CombatEngine.new()
 	doomed.setup(_make_party_combat(1, 1), [Enemies.spawn("stone_golem", 5)], 7)
 	var safety := 0
@@ -479,3 +501,8 @@ func test_serialization() -> void:
 	)
 	var acted := resumed.combat.player_action("basic_attack", 0)
 	check(acted, "striden är spelbar efter resume")
+	var second_save := RunState.from_dict(JSON.parse_string(JSON.stringify(resumed.to_dict())))
+	check(
+		second_save.combat.hero_acted == resumed.combat.hero_acted,
+		"vem som agerat i rundan överlever resume"
+	)

@@ -19,6 +19,7 @@ var turn_index := 0
 var turn_order: Array = []  # [{"side": "hero"/"enemy", "index": int}, ...]
 var awaiting_player := false
 var active_hero := -1
+var hero_acted: Array = []  # hjälteindex som förbrukat sin handling i rundan
 var result := ""  # "", "victory", "defeat"
 var log: Array = []
 var rng := RandomNumberGenerator.new()
@@ -93,6 +94,8 @@ func downed_heroes() -> Array:
 
 
 func _build_turn_order() -> void:
+	hero_acted = []
+	_round_start_hero_upkeep()
 	var entries: Array = []
 	for i in heroes.size():
 		if heroes[i]["hp"] > 0:
@@ -114,7 +117,40 @@ func _effective_speed(unit: Dictionary) -> int:
 	return speed
 
 
-## Kör tills nästa hjälte står i tur (active_hero) eller striden är slut.
+## Statuseffekter på hjältar tickar vid rundstart (gift, stun). En
+## stunnad hjälte förlorar rundans handling.
+func _round_start_hero_upkeep() -> void:
+	for i in heroes.size():
+		var hero: Dictionary = heroes[i]
+		if hero["hp"] <= 0:
+			continue
+		if not _tick_statuses_and_check(hero, hero["name"]) and hero["hp"] > 0:
+			hero_acted.append(i)
+
+
+## Förvald hjälte för en partyslot: slotens ägare om möjlig, annars
+## första levande hjälte som inte agerat. -1 = sloten är förbrukad.
+func _default_actor(scheduled: int) -> int:
+	if heroes[scheduled]["hp"] > 0 and scheduled not in hero_acted:
+		return scheduled
+	for i in living_heroes():
+		if i not in hero_acted:
+			return i
+	return -1
+
+
+## Spelaren byter vilken hjälte som agerar på partyts tur ("vem kör
+## sin runda först" – fri ordning inom rundan).
+func select_actor(index: int) -> bool:
+	if not awaiting_player or index < 0 or index >= heroes.size():
+		return false
+	if heroes[index]["hp"] <= 0 or index in hero_acted:
+		return false
+	active_hero = index
+	return true
+
+
+## Kör tills partyt står i tur (active_hero = förval) eller striden är slut.
 func advance_until_player_turn() -> void:
 	awaiting_player = false
 	active_hero = -1
@@ -123,18 +159,17 @@ func advance_until_player_turn() -> void:
 			round_number += 1
 			_build_turn_order()
 			plan_intents()
+			if _party_wiped():
+				_end_combat("defeat")
+				return
 			continue
 		var entry: Dictionary = turn_order[turn_index]
 		if String(entry["side"]) == "hero":
-			var hero: Dictionary = heroes[int(entry["index"])]
-			if hero["hp"] > 0:
-				if _tick_statuses_and_check(hero, hero["name"]):
-					awaiting_player = true
-					active_hero = int(entry["index"])
-					return
-				if _party_wiped():
-					_end_combat("defeat")
-					return
+			var actor := _default_actor(int(entry["index"]))
+			if actor >= 0:
+				awaiting_player = true
+				active_hero = actor
+				return
 			turn_index += 1
 			continue
 		var enemy: Dictionary = enemies[int(entry["index"])]
@@ -175,6 +210,7 @@ func player_action(ability_id: String, target_index: int) -> bool:
 	# Handlingen kan ha ändrat läget (taunt, dödad healer-kompis) –
 	# fiender som inte agerat än tänker om så intentionerna håller.
 	_replan_pending_intents()
+	hero_acted.append(active_hero)
 	awaiting_player = false
 	active_hero = -1
 	if living_enemies().is_empty():
@@ -556,6 +592,7 @@ func to_dict() -> Dictionary:
 		"turn_order": turn_order,
 		"awaiting_player": awaiting_player,
 		"active_hero": active_hero,
+		"hero_acted": hero_acted,
 		"result": result,
 		"log": log.slice(maxi(0, log.size() - 20)),
 		"rng_seed": rng.seed,
@@ -574,6 +611,7 @@ static func from_dict(data: Dictionary) -> CombatEngine:
 	)
 	engine.awaiting_player = data["awaiting_player"]
 	engine.active_hero = int(data.get("active_hero", -1))
+	engine.hero_acted = data.get("hero_acted", []).map(func(v): return int(v))
 	engine.result = data["result"]
 	engine.log = data["log"]
 	engine.rng.seed = int(data["rng_seed"])

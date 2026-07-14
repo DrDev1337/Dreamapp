@@ -186,13 +186,63 @@ static func vmargin(child: Control, margin := 24) -> MarginContainer:
 	return container
 
 
-## Popup för onboarding (US-9.1) och bekräftelser.
+## Popup för onboarding (US-9.1) och bekräftelser. Byggd som en vanlig
+## Control-overlay – Godots fönsterdialoger (AcceptDialog m.fl.) renderas
+## trasigt på mobilwebben och kunde blockera hela spelet utan synlig knapp.
 static func popup(parent: Node, popup_title: String, text: String) -> void:
-	var dialog := AcceptDialog.new()
-	dialog.title = popup_title
-	dialog.dialog_text = text
-	dialog.ok_button_text = "Got it"
-	parent.add_child(dialog)
-	dialog.popup_centered(Vector2i(560, 0))
-	dialog.confirmed.connect(dialog.queue_free)
-	dialog.canceled.connect(dialog.queue_free)
+	var dim := _dialog_overlay(parent, popup_title, text)
+	var ok_button := big_button("Got it", 76)
+	ok_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ok_button.pressed.connect(dim.queue_free)
+	_dialog_buttons(dim).add_child(ok_button)
+
+
+## Bekräftelsedialog: kör on_confirm vid OK, stänger alltid sig själv.
+static func confirm(
+	parent: Node, popup_title: String, text: String, ok_text: String, on_confirm: Callable
+) -> void:
+	var dim := _dialog_overlay(parent, popup_title, text)
+	var buttons := _dialog_buttons(dim)
+	var ok_button := big_button(ok_text, 76)
+	ok_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ok_button.pressed.connect(
+		func():
+			dim.queue_free()
+			on_confirm.call()
+	)
+	var cancel_button := big_button("Cancel", 76)
+	cancel_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cancel_button.pressed.connect(dim.queue_free)
+	buttons.add_child(ok_button)
+	buttons.add_child(cancel_button)
+
+
+static func _dialog_overlay(parent: Node, popup_title: String, text: String) -> ColorRect:
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.7)
+	dim.z_index = 100
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	parent.add_child(dim)
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	dim.add_child(center)
+	var box := panel(Color("2a2440"))
+	box.custom_minimum_size = Vector2(600, 0)
+	center.add_child(box)
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 14)
+	content.set_meta("dialog_content", true)
+	box.add_child(content)
+	content.add_child(title(popup_title, 26))
+	var body_label := body(text, 17)
+	body_label.custom_minimum_size = Vector2(560, 0)
+	content.add_child(body_label)
+	return dim
+
+
+static func _dialog_buttons(dim: ColorRect) -> HBoxContainer:
+	var content: VBoxContainer = dim.get_child(0).get_child(0).get_child(0)
+	var buttons := HBoxContainer.new()
+	buttons.add_theme_constant_override("separation", 10)
+	content.add_child(buttons)
+	return buttons
