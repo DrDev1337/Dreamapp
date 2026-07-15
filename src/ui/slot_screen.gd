@@ -165,14 +165,14 @@ func _start_creating(slot: int) -> void:
 	rebuild()
 
 
-## Rullar namn + en startförmåga per rekryt: de fyra axlarna täcks
-## alltid, femte hjälten får en slumpad axel. Reroll ger nya kombon.
+## Rullar namn + en startförmåga per rekryt: fem OLIKA klassaxlar
+## slumpas ur de åtta. Reroll ger nya kombon.
 func _roll_names() -> void:
 	var pool := NAMES.duplicate()
 	pool.shuffle()
 	var axes: Array = Abilities.AXES.duplicate()
-	axes.append(Abilities.AXES[randi_range(0, Abilities.AXES.size() - 1)])
 	axes.shuffle()
+	axes = axes.slice(0, Balance.PARTY_SIZE)
 	suggested_specs = []
 	for i in Balance.PARTY_SIZE:
 		var axis: String = axes[i]

@@ -246,6 +246,55 @@ func test_party_targeting_and_support() -> void:
 	var exp_second_hit := exp_hp - int(exp_engine.enemies[0]["hp"])
 	check(exp_second_hit > base_second_hit, "exponerade mål tar mer skada (+35%)")
 
+	# Weakened (Curse/Cutting Words): fienden slår -30% och intenten visar det.
+	var weak_engine := CombatEngine.new()
+	weak_engine.setup(_make_party_combat(), [Enemies.spawn("stone_golem", 1)], 14)
+	weak_engine.advance_until_player_turn()
+	var est_before := int(weak_engine.enemies[0]["intent"].get("est", 0))
+	weak_engine.enemies[0]["statuses"].append({"id": "weakened", "duration": 2, "mult": 0.7})
+	weak_engine.plan_intents()
+	var est_after := int(weak_engine.enemies[0]["intent"].get("est", 0))
+	check(est_after < est_before, "weakened sänker fiendens skada och syns i intenten")
+
+	# Marked (Hunter's Mark): nästa träff förstärks och förbrukar märket.
+	var mark_engine := CombatEngine.new()
+	mark_engine.setup(_make_party_combat(), [Enemies.spawn("stone_golem", 1)], 15)
+	mark_engine.advance_until_player_turn()
+	mark_engine.enemies[0]["statuses"].append({"id": "marked", "duration": 3, "mult": 2.0})
+	var golem_hp := int(mark_engine.enemies[0]["hp"])
+	mark_engine.player_action("basic_attack", 0)
+	var marked_hit := golem_hp - int(mark_engine.enemies[0]["hp"])
+	check(marked_hit >= 4, "märkt mål tar förstärkt skada")
+	var mark_left := false
+	for status in mark_engine.enemies[0]["statuses"]:
+		if status["id"] == "marked":
+			mark_left = true
+	check(not mark_left, "märket förbrukas av träffen")
+
+	# Life Drain: en del av skadan helar användaren.
+	var drain_heroes := _make_party_combat()
+	drain_heroes[0]["ability_ids"] = ["basic_attack", "life_drain"]
+	var drain_engine := CombatEngine.new()
+	drain_engine.setup(drain_heroes, [Enemies.spawn("stone_golem", 1)], 16)
+	drain_engine.advance_until_player_turn()
+	drain_engine.heroes[0]["hp"] = 10
+	drain_engine.player_action("life_drain", 0)
+	check(int(drain_engine.heroes[0]["hp"]) > 10, "life drain helar användaren")
+
+	# Bard-sånger: buffar hela partyt.
+	var bard_heroes := _make_party_combat()
+	bard_heroes[0]["ability_ids"] = ["basic_attack", "inspire"]
+	var bard_engine := CombatEngine.new()
+	bard_engine.setup(bard_heroes, [Enemies.spawn("stone_golem", 1)], 17)
+	bard_engine.advance_until_player_turn()
+	bard_engine.player_action("inspire", -1)
+	var buffed := 0
+	for combat_hero in bard_engine.heroes:
+		for status in combat_hero["statuses"]:
+			if status["id"] == "atk_up":
+				buffed += 1
+	check(buffed == Balance.PARTY_SIZE, "inspire buffar hela partyt")
+
 	# Revive: nekas utan fallen hjälte, väcker annars den första fallna.
 	var revive_heroes := _make_party_combat()
 	revive_heroes[0]["ability_ids"] = ["basic_attack", "resurrect"]
@@ -297,6 +346,25 @@ func test_hero_and_classing() -> void:
 		"%d val i samma riktning låser klass (US-4.2)" % Balance.CLASS_UNLOCK_PICKS
 	)
 	check("meteor" in hero.ability_ids, "signaturförmåga lärs vid klasslåsning")
+
+	# 8 klassaxlar (D&D-inspirerade), alla kompletta.
+	check(Abilities.AXES.size() == 8, "8 klassaxlar")
+	for axis in Abilities.AXES:
+		check(
+			Abilities.abilities_for_axis(axis).size() >= 3,
+			"axeln %s har minst 3 valbara förmågor" % axis
+		)
+		var signature_id: String = Abilities.SIGNATURE_BY_AXIS.get(axis, "")
+		check(
+			not Abilities.get_ability(signature_id).is_empty(),
+			"axeln %s har en signaturförmåga" % axis
+		)
+		check(LevelUp.STAT_CHOICES.has(axis), "axeln %s har stats-paket" % axis)
+		check(LevelUp.AXIS_LABELS.has(axis), "axeln %s har etikett" % axis)
+	var barb := Hero.new()
+	barb.apply_class_pick("barbarian")
+	check(barb.apply_class_pick("barbarian"), "ny klass (barbarian) kan låsas")
+	check("rampage" in barb.ability_ids, "barbarian lär sig sin signatur")
 
 	var party := PartyState.create(["Ask", "Embla", "Runa", "Grim", "Saga"])
 	check(party.heroes.size() == Balance.PARTY_SIZE, "nytt party har 5 hjältar")

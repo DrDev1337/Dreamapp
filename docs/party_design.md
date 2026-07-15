@@ -48,8 +48,15 @@ uppgradering: 3 alternativ, kopplade till tre olika hjältar. Två val åt samma
 på samma hjälte låser klassidentitet + signaturförmåga (var tre, men simuleringen
 visade att bara 2 av 5 klasser hann låsas på 100 runs – combon uppstod aldrig).
 
+8 klassaxlar (D&D-inspirerade). Combo-statusar i **fetstil** – de är limmet
+mellan klasserna och gör handlingsordningen till taktik:
+
 | Axel | Karaktär | Förmågor | Signatur |
 |---|---|---|---|
+| Barbarian | raseri, AoE | Cleave, Rage (+60% skada), Reckless Swing | Rampage (AoE-svep) |
+| Ranger | märkta mål | Hunter's Mark (**marked**: nästa träff +75%), Piercing Shot (ignorerar rustning), Volley | Deadeye |
+| Warlock | förbannelser | Curse of Frailty (**weakened**: -30% fiendeskada), Life Drain (självläkning), Eldritch Blast | Doom (AoE + weakened) |
+| Bard | partysånger | Cutting Words (**weakened**), Song of Rest (grupp-heal), Inspire (party +30% skada) | Grand Finale (party +50%) |
 | Tank | uthållighet, kontroll | Taunt, Shield Bash (stun), Fortify | Bulwark (sköld + mass-taunt) |
 | Healer | uppehälle | Mend, Radiance (grupp-heal), Smite | Resurrect (väcker fallen) |
 | Mage | AoE/magisk skada | Firebolt, Frost Nova, Arcane Shield | Meteor |

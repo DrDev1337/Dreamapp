@@ -544,6 +544,10 @@ func _status_text(unit: Dictionary) -> String:
 				parts.append("tnt")
 			"exposed":
 				parts.append("EXP+")
+			"marked":
+				parts.append("MRK")
+			"weakened":
+				parts.append("wk-")
 	return " ".join(parts)
 
 

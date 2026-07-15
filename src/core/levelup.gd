@@ -4,7 +4,16 @@ class_name LevelUp
 ## hjältarna mot tank/healer/mage/rogue; CLASS_UNLOCK_PICKS val åt samma
 ## håll på samma hjälte låser klassidentitet + signaturförmåga.
 
-const AXIS_LABELS := {"tank": "Tank", "healer": "Healer", "mage": "Mage", "rogue": "Rogue"}
+const AXIS_LABELS := {
+	"tank": "Tank",
+	"healer": "Healer",
+	"mage": "Mage",
+	"rogue": "Rogue",
+	"barbarian": "Barbarian",
+	"ranger": "Ranger",
+	"warlock": "Warlock",
+	"bard": "Bard",
+}
 
 const STAT_CHOICES := {
 	"tank": {"stats": {"max_hp": 8, "armor": 1}, "desc": "+8 HP, +1 armor"},
@@ -12,6 +21,11 @@ const STAT_CHOICES := {
 	{"stats": {"magic": 2, "max_mana": 3, "max_hp": 3}, "desc": "+2 magic, +3 mana, +3 HP"},
 	"mage": {"stats": {"magic": 3, "max_mana": 2}, "desc": "+3 magic, +2 mana"},
 	"rogue": {"stats": {"attack": 2, "speed": 1}, "desc": "+2 attack, +1 speed"},
+	"barbarian": {"stats": {"attack": 2, "max_hp": 5}, "desc": "+2 attack, +5 HP"},
+	"ranger": {"stats": {"attack": 2, "speed": 2}, "desc": "+2 attack, +2 speed"},
+	"warlock": {"stats": {"magic": 2, "max_hp": 4}, "desc": "+2 magic, +4 HP"},
+	"bard":
+	{"stats": {"magic": 1, "max_mana": 3, "speed": 1}, "desc": "+1 magic, +3 mana, +1 speed"},
 }
 
 

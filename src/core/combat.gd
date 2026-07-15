@@ -259,9 +259,32 @@ func _do_attack(hero: Dictionary, ability: Dictionary, target_index: int) -> voi
 			var damage := _compute_damage(hero, enemy, ability)
 			if ability.has("bonus_vs_full_hp") and enemy["hp"] == enemy["max_hp"]:
 				damage = int(damage * float(ability["bonus_vs_full_hp"]))
+			damage = _consume_mark(enemy, damage)
 			_deal_damage(enemy, damage, enemy["name"])
+			# Life Drain-mönstret: en del av skadan helar användaren.
+			if ability.has("leech"):
+				var healed: int = (
+					mini(
+						int(hero["max_hp"]), int(hero["hp"]) + int(damage * float(ability["leech"]))
+					)
+					- int(hero["hp"])
+				)
+				hero["hp"] = int(hero["hp"]) + healed
+				if healed > 0:
+					log.append("%s drains %d HP." % [hero["name"], healed])
 			if ability.has("status") and enemy["hp"] > 0:
 				enemy["statuses"].append(ability["status"].duplicate())
+
+
+## Marked (Hunter's Mark): förbrukas av nästa träff som då slår +75%.
+func _consume_mark(enemy: Dictionary, damage: int) -> int:
+	for i in enemy["statuses"].size():
+		var status: Dictionary = enemy["statuses"][i]
+		if status["id"] == "marked":
+			enemy["statuses"].remove_at(i)
+			log.append("The mark is struck true!")
+			return int(damage * float(status.get("mult", 1.75)))
+	return damage
 
 
 ## Heal går automatiskt till mest skadad levande hjälte (party_design.md).
@@ -310,6 +333,12 @@ func _do_defend(hero: Dictionary) -> void:
 
 
 func _do_buff(hero: Dictionary, ability: Dictionary) -> void:
+	# Bard-mönstret: sånger buffar hela partyt.
+	if String(ability["target"]) == "all_allies":
+		for i in living_heroes():
+			heroes[i]["statuses"].append(ability["status"].duplicate())
+		log.append("%s uses %s on the whole party!" % [hero["name"], ability["name"]])
+		return
 	var target := hero
 	if String(ability["target"]) == "ally":
 		var most_wounded := _most_wounded_hero()
@@ -337,11 +366,14 @@ func _compute_damage(attacker: Dictionary, defender: Dictionary, ability: Dictio
 		base -= float(defender.get("armor", 0)) * (1.0 - Balance.MAGIC_ARMOR_PENETRATION)
 	else:
 		base = float(attacker["attack"]) * float(ability["power"])
-		base -= float(defender.get("armor", 0))
+		if not ability.get("armor_pierce", false):
+			base -= float(defender.get("armor", 0))
 	base *= float(attacker.get("damage_mult", 1.0))
 	for status in attacker["statuses"]:
 		if status["id"] == "atk_up":
 			base *= float(status.get("mult", 1.5))
+		elif status["id"] == "weakened":
+			base *= float(status.get("mult", 0.7))
 	# Exposed (combo-status): målet tar mer skada av ALLA – ordningen
 	# inom rundan blir taktik (öppna med backstab, nuka sedan).
 	for status in defender["statuses"]:
@@ -501,7 +533,17 @@ func _estimate_damage(enemy: Dictionary, mult: float, ignore_half_armor: bool, t
 	var armor := float(heroes[target].get("armor", 0))
 	if ignore_half_armor:
 		armor *= 0.5
-	return maxi(Balance.MIN_DAMAGE, int(float(enemy["attack"]) * mult - armor))
+	var base := float(enemy["attack"]) * mult * _weakened_mult(enemy) - armor
+	return maxi(Balance.MIN_DAMAGE, int(base))
+
+
+## Weakened (Curse/Cutting Words): -30% skada – syns även i intenten.
+func _weakened_mult(unit: Dictionary) -> float:
+	var mult := 1.0
+	for status in unit["statuses"]:
+		if status["id"] == "weakened":
+			mult *= float(status.get("mult", 0.7))
+	return mult
 
 
 # --- Fiendeturer ---
@@ -555,7 +597,7 @@ func _enemy_attack(enemy: Dictionary, mult: float, target: int) -> void:
 	var armor := float(hero.get("armor", 0))
 	if ignore_half_armor:
 		armor *= 0.5
-	var base := float(enemy["attack"]) * mult - armor
+	var base := float(enemy["attack"]) * mult * _weakened_mult(enemy) - armor
 	base *= rng.randf_range(0.9, 1.1)
 	var damage := maxi(Balance.MIN_DAMAGE, int(base))
 	log.append("%s attacks %s." % [enemy["name"], hero["name"]])

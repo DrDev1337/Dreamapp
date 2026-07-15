@@ -12,6 +12,15 @@ const _WAR_CRY := preload("res://assets/icons/war_cry.svg")
 const _HEALING := preload("res://assets/icons/healing.svg")
 const _CRYSTAL := preload("res://assets/icons/crystal.svg")
 const _KNOCKOUT := preload("res://assets/icons/knockout.svg")
+const _BERSERK := preload("res://assets/icons/berserk.svg")
+const _CROSSED_SWORDS := preload("res://assets/icons/crossed_swords.svg")
+const _BOWMAN := preload("res://assets/icons/bowman.svg")
+const _CROWNED_SKULL := preload("res://assets/icons/crowned_skull.svg")
+const _STRIKE := preload("res://assets/icons/strike.svg")
+const _SHADOW := preload("res://assets/icons/shadow.svg")
+const _HEART := preload("res://assets/icons/heart.svg")
+const _CAMPFIRE := preload("res://assets/icons/campfire.svg")
+const _SKULL := preload("res://assets/icons/skull.svg")
 
 const ABILITY := {
 	"basic_attack": _SWORD,
@@ -19,10 +28,10 @@ const ABILITY := {
 	"taunt": _WAR_CRY,
 	"shield_bash": preload("res://assets/icons/shield_bash.svg"),
 	"fortify": _MAGIC_SHIELD,
-	"bulwark": preload("res://assets/icons/berserk.svg"),
+	"bulwark": _BERSERK,
 	"mend": _HEALING,
 	"radiance": _CRYSTAL,
-	"smite": preload("res://assets/icons/strike.svg"),
+	"smite": _STRIKE,
 	"resurrect": _KNOCKOUT,
 	"firebolt": _FIREBALL,
 	"frost_nova": preload("res://assets/icons/frost.svg"),
@@ -31,7 +40,23 @@ const ABILITY := {
 	"backstab": preload("res://assets/icons/backstab.svg"),
 	"poison_blade": preload("res://assets/icons/poison.svg"),
 	"evasion": preload("res://assets/icons/dodge.svg"),
-	"shadow_dance": preload("res://assets/icons/shadow.svg"),
+	"shadow_dance": _SHADOW,
+	"cleave": _CROSSED_SWORDS,
+	"rage": _WAR_CRY,
+	"reckless_swing": _STRIKE,
+	"rampage": _BERSERK,
+	"marked_shot": _BOWMAN,
+	"piercing_shot": _STRIKE,
+	"volley": _CROSSED_SWORDS,
+	"deadeye": _CROWNED_SKULL,
+	"curse_of_frailty": _SKULL,
+	"life_drain": _HEART,
+	"eldritch_blast": _SHADOW,
+	"doom": _CROWNED_SKULL,
+	"cutting_words": _KNOCKOUT,
+	"rest_song": _CAMPFIRE,
+	"inspire": _WAR_CRY,
+	"grand_finale": _CRYSTAL,
 }
 
 # Fiende-intentioner (US-3.4): ikon + färg per handlingstyp.
@@ -41,7 +66,7 @@ const INTENT := {
 	"guard": _MAGIC_SHIELD,
 	"heal": _HEALING,
 	"frenzy": _WAR_CRY,
-	"double": preload("res://assets/icons/crossed_swords.svg"),
+	"double": _CROSSED_SWORDS,
 	"stunned": _KNOCKOUT,
 }
 
@@ -57,12 +82,12 @@ const INTENT_TINT := {
 
 const ENEMY := {
 	"cave_rat": preload("res://assets/icons/rat.svg"),
-	"skeleton_archer": preload("res://assets/icons/bowman.svg"),
+	"skeleton_archer": _BOWMAN,
 	"cultist_healer": preload("res://assets/icons/cowled.svg"),
 	"stone_golem": preload("res://assets/icons/golem.svg"),
 	"imp": preload("res://assets/icons/imp.svg"),
 	"grave_warden": _GRAVEYARD,
-	"heart_of_depths": preload("res://assets/icons/heart.svg"),
+	"heart_of_depths": _HEART,
 }
 
 # Färgton per fiendetyp – ger varje siluett en egen identitet.
@@ -80,19 +105,24 @@ const ROOM := {
 	"combat": _SWORD,
 	"chest": preload("res://assets/icons/chest.svg"),
 	"miniboss": _GRAVEYARD,
-	"boss": preload("res://assets/icons/crowned_skull.svg"),
+	"boss": _CROWNED_SKULL,
 }
 
+# 8 klasser (D&D-inspirerade axlar).
 const CLASS_EMBLEM := {
 	"tank": _MAGIC_SHIELD,
 	"healer": _HEALING,
 	"mage": _FIREBALL,
 	"rogue": preload("res://assets/icons/ninja_mask.svg"),
+	"barbarian": _BERSERK,
+	"ranger": _BOWMAN,
+	"warlock": _SHADOW,
+	"bard": _WAR_CRY,
 }
 
 const ESSENCE := _CRYSTAL
-const CAMPFIRE := preload("res://assets/icons/campfire.svg")
-const SKULL := preload("res://assets/icons/skull.svg")
+const CAMPFIRE := _CAMPFIRE
+const SKULL := _SKULL
 const LOCK := preload("res://assets/icons/lock.svg")
 const STAIRS := preload("res://assets/icons/stairs.svg")
 const ANVIL := preload("res://assets/icons/anvil.svg")

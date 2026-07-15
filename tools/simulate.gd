@@ -16,14 +16,14 @@ extends SceneTree
 
 const RUNS := 100
 const FRESH_RUNS := 50
-const DESIRED_AXES := ["tank", "rogue", "healer", "mage", "mage"]
+const DESIRED_AXES := ["tank", "barbarian", "healer", "warlock", "ranger"]
 # Speglar party-pickern: varje rekryt startar med en förmåga (en per axel).
 const SIM_SPECS := [
 	{"name": "Sim1", "ability_id": "taunt"},
-	{"name": "Sim2", "ability_id": "backstab"},
+	{"name": "Sim2", "ability_id": "cleave"},
 	{"name": "Sim3", "ability_id": "mend"},
-	{"name": "Sim4", "ability_id": "firebolt"},
-	{"name": "Sim5", "ability_id": "frost_nova"},
+	{"name": "Sim4", "ability_id": "eldritch_blast"},
+	{"name": "Sim5", "ability_id": "marked_shot"},
 ]
 
 var casual_mode := false
@@ -262,8 +262,9 @@ func _support_action(combat: CombatEngine, hero: Dictionary, alive: Array) -> Ar
 		if fraction < 0.7:
 			wounded_count += 1
 	if worst_fraction < 0.55:
-		if _usable(hero, "radiance") and wounded_count >= 3:
-			return ["radiance", -1]
+		for heal_id in ["radiance", "rest_song"]:
+			if _usable(hero, heal_id) and wounded_count >= 3:
+				return [heal_id, -1]
 		if _usable(hero, "mend"):
 			return ["mend", -1]
 	# Tanka hotet från frontraden.

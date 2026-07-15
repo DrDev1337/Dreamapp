@@ -251,11 +251,228 @@ const CATALOG := {
 		"hits": 2,
 		"signature": true,
 	},
+	# --- Barbarian (raseri och AoE-yxa) ---
+	"cleave":
+	{
+		"id": "cleave",
+		"name": "Cleave",
+		"desc": "Sweep your weapon through all enemies.",
+		"axis": "barbarian",
+		"mana_cost": 4,
+		"cooldown": 1,
+		"power": 0.7,
+		"kind": "physical",
+		"target": "all_enemies",
+	},
+	"rage":
+	{
+		"id": "rage",
+		"name": "Rage",
+		"desc": "+60% damage for 2 rounds.",
+		"axis": "barbarian",
+		"mana_cost": 3,
+		"cooldown": 3,
+		"power": 0.0,
+		"kind": "buff",
+		"target": "self",
+		"status": {"id": "atk_up", "duration": 2, "mult": 1.6},
+	},
+	"reckless_swing":
+	{
+		"id": "reckless_swing",
+		"name": "Reckless Swing",
+		"desc": "A wild, heavy blow.",
+		"axis": "barbarian",
+		"mana_cost": 3,
+		"cooldown": 1,
+		"power": 1.7,
+		"kind": "physical",
+		"target": "enemy",
+	},
+	"rampage":
+	{
+		"id": "rampage",
+		"name": "Rampage",
+		"desc": "Signature: a devastating sweep through every enemy.",
+		"axis": "barbarian",
+		"mana_cost": 8,
+		"cooldown": 4,
+		"power": 1.2,
+		"kind": "physical",
+		"target": "all_enemies",
+		"signature": true,
+	},
+	# --- Ranger (märkta mål – combo som förbrukas av nästa träff) ---
+	"marked_shot":
+	{
+		"id": "marked_shot",
+		"name": "Hunter's Mark",
+		"desc": "Damage and mark the target: the next hit on it deals +75%.",
+		"axis": "ranger",
+		"mana_cost": 3,
+		"cooldown": 1,
+		"power": 0.6,
+		"kind": "physical",
+		"target": "enemy",
+		"status": {"id": "marked", "duration": 3, "mult": 1.75},
+	},
+	"piercing_shot":
+	{
+		"id": "piercing_shot",
+		"name": "Piercing Shot",
+		"desc": "An arrow that ignores armor.",
+		"axis": "ranger",
+		"mana_cost": 3,
+		"cooldown": 0,
+		"power": 1.2,
+		"kind": "physical",
+		"target": "enemy",
+		"armor_pierce": true,
+	},
+	"volley":
+	{
+		"id": "volley",
+		"name": "Volley",
+		"desc": "Arrows rain over all enemies.",
+		"axis": "ranger",
+		"mana_cost": 5,
+		"cooldown": 2,
+		"power": 0.8,
+		"kind": "physical",
+		"target": "all_enemies",
+	},
+	"deadeye":
+	{
+		"id": "deadeye",
+		"name": "Deadeye",
+		"desc": "Signature: one perfect shot.",
+		"axis": "ranger",
+		"mana_cost": 8,
+		"cooldown": 4,
+		"power": 2.6,
+		"kind": "physical",
+		"target": "enemy",
+		"armor_pierce": true,
+		"signature": true,
+	},
+	# --- Warlock (förbannelser och livsstöld) ---
+	"curse_of_frailty":
+	{
+		"id": "curse_of_frailty",
+		"name": "Curse of Frailty",
+		"desc": "Weakens the target: it deals -30% damage for 2 rounds.",
+		"axis": "warlock",
+		"mana_cost": 3,
+		"cooldown": 1,
+		"power": 0.3,
+		"kind": "magic",
+		"target": "enemy",
+		"status": {"id": "weakened", "duration": 2, "mult": 0.7},
+	},
+	"life_drain":
+	{
+		"id": "life_drain",
+		"name": "Life Drain",
+		"desc": "Magic damage; heal yourself for half of it.",
+		"axis": "warlock",
+		"mana_cost": 4,
+		"cooldown": 1,
+		"power": 1.2,
+		"kind": "magic",
+		"target": "enemy",
+		"leech": 0.5,
+	},
+	"eldritch_blast":
+	{
+		"id": "eldritch_blast",
+		"name": "Eldritch Blast",
+		"desc": "Raw otherworldly damage.",
+		"axis": "warlock",
+		"mana_cost": 3,
+		"cooldown": 0,
+		"power": 1.4,
+		"kind": "magic",
+		"target": "enemy",
+	},
+	"doom":
+	{
+		"id": "doom",
+		"name": "Doom",
+		"desc": "Signature: blast and weaken every enemy.",
+		"axis": "warlock",
+		"mana_cost": 9,
+		"cooldown": 4,
+		"power": 1.1,
+		"kind": "magic",
+		"target": "all_enemies",
+		"status": {"id": "weakened", "duration": 2, "mult": 0.7},
+		"signature": true,
+	},
+	# --- Bard (sånger: buffar hela partyt) ---
+	"cutting_words":
+	{
+		"id": "cutting_words",
+		"name": "Cutting Words",
+		"desc": "Mock an enemy: damage and -30% damage dealt.",
+		"axis": "bard",
+		"mana_cost": 3,
+		"cooldown": 1,
+		"power": 0.8,
+		"kind": "magic",
+		"target": "enemy",
+		"status": {"id": "weakened", "duration": 2, "mult": 0.7},
+	},
+	"rest_song":
+	{
+		"id": "rest_song",
+		"name": "Song of Rest",
+		"desc": "A soothing song heals the whole party a little.",
+		"axis": "bard",
+		"mana_cost": 5,
+		"cooldown": 2,
+		"power": 0.5,
+		"kind": "heal",
+		"target": "all_allies",
+	},
+	"inspire":
+	{
+		"id": "inspire",
+		"name": "Inspire",
+		"desc": "The whole party deals +30% damage for 2 rounds.",
+		"axis": "bard",
+		"mana_cost": 5,
+		"cooldown": 3,
+		"power": 0.0,
+		"kind": "buff",
+		"target": "all_allies",
+		"status": {"id": "atk_up", "duration": 2, "mult": 1.3},
+	},
+	"grand_finale":
+	{
+		"id": "grand_finale",
+		"name": "Grand Finale",
+		"desc": "Signature: the party deals +50% damage for 2 rounds.",
+		"axis": "bard",
+		"mana_cost": 8,
+		"cooldown": 5,
+		"power": 0.0,
+		"kind": "buff",
+		"target": "all_allies",
+		"status": {"id": "atk_up", "duration": 2, "mult": 1.5},
+		"signature": true,
+	},
 }
 
-const AXES := ["tank", "healer", "mage", "rogue"]
+const AXES := ["tank", "healer", "mage", "rogue", "barbarian", "ranger", "warlock", "bard"]
 const SIGNATURE_BY_AXIS := {
-	"tank": "bulwark", "healer": "resurrect", "mage": "meteor", "rogue": "shadow_dance"
+	"tank": "bulwark",
+	"healer": "resurrect",
+	"mage": "meteor",
+	"rogue": "shadow_dance",
+	"barbarian": "rampage",
+	"ranger": "deadeye",
+	"warlock": "doom",
+	"bard": "grand_finale",
 }
 
 
