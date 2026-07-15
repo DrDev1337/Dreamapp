@@ -5,11 +5,16 @@ extends RefCounted
 ## CLASS_UNLOCK_PICKS val åt samma håll låser klassen och ger signaturen.
 
 var hero_name := "Nameless"
-var axis_points := {"tank": 0, "healer": 0, "mage": 0, "rogue": 0}
+var axis_points := {}  # fylls med alla axlar i _init (8 klasser)
 var class_identity := ""
 var ability_ids: Array = ["basic_attack"]
 var bonus_stats := {"max_hp": 0, "attack": 0, "magic": 0, "speed": 0, "armor": 0, "max_mana": 0}
 var equipment := {"weapon": {}, "armor": {}, "trinket": {}}
+
+
+func _init() -> void:
+	for axis in Abilities.AXES:
+		axis_points[axis] = 0
 
 
 ## Registrerar ett klassval. Returnerar true om klassidentitet just låstes.
@@ -81,7 +86,10 @@ func to_dict() -> Dictionary:
 static func from_dict(data: Dictionary) -> Hero:
 	var hero := Hero.new()
 	hero.hero_name = data.get("hero_name", "Nameless")
-	hero.axis_points = data.get("axis_points", {"tank": 0, "healer": 0, "mage": 0, "rogue": 0})
+	# Merga in sparade poäng – äldre saves saknar de nya axlarna.
+	var saved_points: Dictionary = data.get("axis_points", {})
+	for axis in saved_points:
+		hero.axis_points[axis] = int(saved_points[axis])
 	hero.class_identity = data.get("class_identity", "")
 	hero.ability_ids = data.get("ability_ids", ["basic_attack"])
 	hero.bonus_stats = data.get("bonus_stats", hero.bonus_stats)
