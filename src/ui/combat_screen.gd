@@ -524,6 +524,8 @@ func _shake(node: Control) -> void:
 
 func _status_text(unit: Dictionary) -> String:
 	var parts: Array = []
+	if unit.get("guard_next", false):
+		parts.append("grd")
 	for status in unit["statuses"]:
 		match String(status["id"]):
 			"poison":
@@ -540,6 +542,8 @@ func _status_text(unit: Dictionary) -> String:
 				parts.append("evd")
 			"taunt":
 				parts.append("tnt")
+			"exposed":
+				parts.append("EXP+")
 	return " ".join(parts)
 
 

@@ -200,29 +200,10 @@ func _choose_hero_action(combat: CombatEngine) -> Array:
 	var alive := combat.living_enemies()
 	if casual_mode:
 		return ["basic_attack", alive[0]]
-	# 1. Väck fallna kamrater.
-	if _usable(hero, "resurrect") and not combat.downed_heroes().is_empty():
-		return ["resurrect", -1]
-	# 2. Hela när någon är låg.
-	var wounded_count := 0
-	var worst_fraction := 1.0
-	for i in combat.living_heroes():
-		var ally: Dictionary = combat.heroes[i]
-		var fraction := float(ally["hp"]) / float(ally["max_hp"])
-		worst_fraction = minf(worst_fraction, fraction)
-		if fraction < 0.7:
-			wounded_count += 1
-	if worst_fraction < 0.55:
-		if _usable(hero, "radiance") and wounded_count >= 3:
-			return ["radiance", -1]
-		if _usable(hero, "mend"):
-			return ["mend", -1]
-	# 3. Tanka hotet från frontraden.
-	if String(hero["row"]) == "front":
-		for taunt_id in ["bulwark", "taunt"]:
-			if _usable(hero, taunt_id):
-				return [taunt_id, -1]
-	# 4. Bästa skada mot bästa mål.
+	var support := _support_action(combat, hero, alive)
+	if not support.is_empty():
+		return support
+	# Bästa skada mot bästa mål.
 	var target: int = alive[0]
 	var lowest_hp := 999999
 	for i in alive:
@@ -247,7 +228,65 @@ func _choose_hero_action(combat: CombatEngine) -> Array:
 		if score > best_score:
 			best_score = score
 			best_id = id
+	# Mana-ekonomin: bara basattacken kvar men en dyrare förmåga väntar
+	# på mana -> defend och ladda i stället (Slice & Dice-rytmen).
+	if best_id == "basic_attack" and _usable(hero, "defend") and _should_bank_mana(hero):
+		return ["defend", -1]
 	return [best_id, target]
+
+
+## Stödprioriteringar: revive > defend mot stort hot > heal > taunt.
+## Returnerar [] när hjälten ska göra skada i stället.
+func _support_action(combat: CombatEngine, hero: Dictionary, alive: Array) -> Array:
+	if _usable(hero, "resurrect") and not combat.downed_heroes().is_empty():
+		return ["resurrect", -1]
+	# Defend: blocka stora inkommande träffar mot just den här hjälten.
+	var my_threat := 0
+	for i in alive:
+		var enemy_intent: Dictionary = combat.enemies[i].get("intent", {})
+		if int(enemy_intent.get("target", -1)) == combat.active_hero:
+			my_threat += int(enemy_intent.get("est", 0))
+	if (
+		_usable(hero, "defend")
+		and not hero.get("guard_next", false)
+		and my_threat >= int(hero["max_hp"]) * 0.25
+	):
+		return ["defend", -1]
+	# Hela när någon är låg.
+	var wounded_count := 0
+	var worst_fraction := 1.0
+	for i in combat.living_heroes():
+		var ally: Dictionary = combat.heroes[i]
+		var fraction := float(ally["hp"]) / float(ally["max_hp"])
+		worst_fraction = minf(worst_fraction, fraction)
+		if fraction < 0.7:
+			wounded_count += 1
+	if worst_fraction < 0.55:
+		if _usable(hero, "radiance") and wounded_count >= 3:
+			return ["radiance", -1]
+		if _usable(hero, "mend"):
+			return ["mend", -1]
+	# Tanka hotet från frontraden.
+	if String(hero["row"]) == "front":
+		for taunt_id in ["bulwark", "taunt"]:
+			if _usable(hero, taunt_id):
+				return [taunt_id, -1]
+	return []
+
+
+## Sant om en användbar förmåga bara väntar på mer mana.
+func _should_bank_mana(hero: Dictionary) -> bool:
+	for id in hero["ability_ids"]:
+		if id in ["basic_attack", "defend"]:
+			continue
+		var ability := Abilities.get_ability(id)
+		if (
+			int(hero["cooldowns"].get(id, 0)) == 0
+			and int(hero["mana"]) < int(ability["mana_cost"])
+			and int(ability["mana_cost"]) <= int(hero["max_mana"])
+		):
+			return true
+	return false
 
 
 ## Driver partyt mot kompositionen i DESIRED_AXES.

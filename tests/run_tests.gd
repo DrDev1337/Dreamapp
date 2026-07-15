@@ -200,6 +200,52 @@ func test_party_targeting_and_support() -> void:
 	heal_engine.player_action("mend", -1)
 	check(int(heal_engine.heroes[0]["hp"]) == 21, "mend helar mest skadade hjälten (2.2×magi)")
 
+	# Defend (blockbeslutet): halverar nästa träff och laddar mana.
+	var defend_heroes := _make_party_combat()
+	defend_heroes[0]["ability_ids"] = ["basic_attack", "defend"]
+	var defend_engine := CombatEngine.new()
+	defend_engine.setup(defend_heroes, [Enemies.spawn("stone_golem", 1)], 10)
+	defend_engine.advance_until_player_turn()
+	defend_engine.heroes[0]["mana"] = 5
+	check(defend_engine.player_action("defend", -1), "defend är alltid tillgänglig")
+	check(defend_engine.heroes[0]["guard_next"], "defend höjer garden")
+	check(
+		(
+			int(defend_engine.heroes[0]["mana"])
+			== 5 + Balance.DEFEND_MANA_BONUS + Balance.HERO_MANA_REGEN
+		),
+		"defend laddar mana (+%d)" % Balance.DEFEND_MANA_BONUS
+	)
+	defend_engine._deal_damage(defend_engine.heroes[0], 10, "Hero0")
+	check(int(defend_engine.heroes[0]["hp"]) == 25, "garden halverar nästa träff")
+	check(not defend_engine.heroes[0].get("guard_next", false), "garden förbrukas av träffen")
+
+	# Exposed (combo-motorn): backstab gör att målet tar mer skada av alla.
+	var expose_heroes := _make_party_combat()
+	expose_heroes[0]["ability_ids"] = ["basic_attack", "backstab"]
+	var base_engine := CombatEngine.new()
+	base_engine.setup(_make_party_combat(), [Enemies.spawn("stone_golem", 1)], 12)
+	var exp_engine := CombatEngine.new()
+	exp_engine.setup(expose_heroes, [Enemies.spawn("stone_golem", 1)], 12)
+	exp_engine.advance_until_player_turn()
+	exp_engine.player_action("backstab", 0)
+	var has_exposed := false
+	for status in exp_engine.enemies[0]["statuses"]:
+		if status["id"] == "exposed":
+			has_exposed = true
+	check(has_exposed, "backstab exponerar målet")
+	# Samma seed + samma slumpsekvens: attacken efter exponering gör mer
+	# skada än motsvarande attack utan.
+	base_engine.advance_until_player_turn()
+	base_engine.player_action("basic_attack", 0)
+	var base_hp := int(base_engine.enemies[0]["hp"])
+	base_engine.player_action("basic_attack", 0)
+	var base_second_hit := base_hp - int(base_engine.enemies[0]["hp"])
+	var exp_hp := int(exp_engine.enemies[0]["hp"])
+	exp_engine.player_action("basic_attack", 0)
+	var exp_second_hit := exp_hp - int(exp_engine.enemies[0]["hp"])
+	check(exp_second_hit > base_second_hit, "exponerade mål tar mer skada (+35%)")
+
 	# Revive: nekas utan fallen hjälte, väcker annars den första fallna.
 	var revive_heroes := _make_party_combat()
 	revive_heroes[0]["ability_ids"] = ["basic_attack", "resurrect"]
@@ -239,6 +285,10 @@ func test_hero_and_classing() -> void:
 	print("Hero & classing…")
 	var hero := Hero.new()
 	check(hero.ability_ids == ["basic_attack"], "rekryter börjar med bara basattack (US-4.1)")
+	check(
+		hero.combat_ability_ids() == ["basic_attack", "defend"],
+		"defend är universell i strid (blockbeslutet)"
+	)
 	for i in Balance.CLASS_UNLOCK_PICKS - 1:
 		check(not hero.apply_class_pick("mage"), "för få val låser inte klass")
 	var unlocked := hero.apply_class_pick("mage")

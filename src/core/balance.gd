@@ -60,7 +60,10 @@ const HERO_BASE_MAGIC := 4
 const HERO_BASE_SPEED := 6
 const HERO_BASE_ARMOR := 0
 const HERO_BASE_MANA := 8
-const HERO_MANA_REGEN := 2
+# Stram passiv regen gör Defend till mana-motorn: rundor växlar mellan
+# att ladda (defend) och bränna (förmågor) – Slice & Dice-rytmen.
+const HERO_MANA_REGEN := 1
+const DEFEND_MANA_BONUS := 3
 
 # --- Level och klassning (US-4.2) ---
 const XP_PER_LEVEL_BASE := 40

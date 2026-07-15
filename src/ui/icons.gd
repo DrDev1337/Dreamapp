@@ -15,6 +15,7 @@ const _KNOCKOUT := preload("res://assets/icons/knockout.svg")
 
 const ABILITY := {
 	"basic_attack": _SWORD,
+	"defend": _MAGIC_SHIELD,
 	"taunt": _WAR_CRY,
 	"shield_bash": preload("res://assets/icons/shield_bash.svg"),
 	"fortify": _MAGIC_SHIELD,

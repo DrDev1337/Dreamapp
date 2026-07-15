@@ -22,6 +22,21 @@ const CATALOG := {
 		"kind": "physical",
 		"target": "enemy",
 	},
+	# Universell (alla hjältar): blockbeslutet + mana-motorn. Att avstå
+	# skada för att stå emot en intent ELLER ladda mana är kärnvalet
+	# varje runda (Slay the Spire-block / Slice & Dice-pips).
+	"defend":
+	{
+		"id": "defend",
+		"name": "Defend",
+		"desc": "Halve the next hit taken and focus: +3 mana.",
+		"axis": "none",
+		"mana_cost": 0,
+		"cooldown": 0,
+		"power": 0.0,
+		"kind": "defend",
+		"target": "self",
+	},
 	# --- Tank ---
 	"taunt":
 	{
@@ -180,11 +195,13 @@ const CATALOG := {
 		"signature": true,
 	},
 	# --- Rogue ---
+	# Exposed är combo-motorn: rogue öppnar, resten av partyt slår
+	# hårdare på samma mål – handlingsordningen (fritt vald) får payoff.
 	"backstab":
 	{
 		"id": "backstab",
 		"name": "Backstab",
-		"desc": "Double damage against unharmed enemies.",
+		"desc": "Double damage to unharmed enemies. Exposes the target: +35% damage taken.",
 		"axis": "rogue",
 		"mana_cost": 3,
 		"cooldown": 0,
@@ -192,6 +209,7 @@ const CATALOG := {
 		"kind": "physical",
 		"target": "enemy",
 		"bonus_vs_full_hp": 2.0,
+		"status": {"id": "exposed", "duration": 2, "mult": 1.35},
 	},
 	"poison_blade":
 	{

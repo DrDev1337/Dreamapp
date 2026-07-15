@@ -31,11 +31,12 @@ func learn_ability(id: String) -> void:
 		ability_ids.append(id)
 
 
-## Aktiva förmågor i strid: basattack + max 3 övriga (mobilskärm).
+## Aktiva förmågor i strid: basattack + defend (universella) + max 3
+## egna (mobilskärm). Defend är blockbeslutet alla hjältar alltid har.
 func combat_ability_ids() -> Array:
-	var actives: Array = ["basic_attack"]
+	var actives: Array = ["basic_attack", "defend"]
 	for id in ability_ids:
-		if id != "basic_attack" and actives.size() < 4:
+		if id not in actives and actives.size() < 5:
 			actives.append(id)
 	return actives
 

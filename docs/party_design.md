@@ -28,6 +28,11 @@ behålls oförändrad – partyt ersätter bara hjälten som farkost.
   rundstart; en stunnad hjälte förlorar rundans handling.
 - Fiende-intentioner planeras vid rundstart och visar nu även **vilken hjälte**
   fienden tänker slå ("Attack Ylva ~7") – det taktiska pusslet.
+- **Defend** (universell handling): halverar nästa träff OCH ger +3 mana.
+  Tillsammans med stram passiv regen (1/handling) är det stridens ekonomi:
+  ladda eller bränna, blocka intenten eller racea den (StS-block/S&D-pips).
+- **Exposed** (combo-status via Backstab): målet tar +35% skada av alla i
+  2 rundor – den fria handlingsordningen får payoff (öppna, sedan nuka).
 - **Hjältedöd ≠ förlust:** en hjälte på 0 HP är utslagen (resten av striden och
   vidare tills checkpoint, som väcker upp och helar alla). Runnen förloras först
   vid **full wipe** – då gäller Essens-högen som vanligt.

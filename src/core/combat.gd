@@ -234,6 +234,8 @@ func _execute_hero_ability(hero: Dictionary, ability: Dictionary, target_index: 
 			_do_taunt(hero, ability)
 		"buff":
 			_do_buff(hero, ability)
+		"defend":
+			_do_defend(hero)
 		_:
 			_do_attack(hero, ability, target_index)
 
@@ -299,6 +301,14 @@ func _do_taunt(hero: Dictionary, ability: Dictionary) -> void:
 	log.append("%s taunts the enemies!" % hero["name"])
 
 
+## Defend: nästa träff halveras (guard_next, samma flagga som fiendernas
+## guard) och hjälten fokuserar – mana-motorn i stridsekonomin.
+func _do_defend(hero: Dictionary) -> void:
+	hero["guard_next"] = true
+	hero["mana"] = mini(int(hero["max_mana"]), int(hero["mana"]) + Balance.DEFEND_MANA_BONUS)
+	log.append("%s braces and focuses (+%d mana)." % [hero["name"], Balance.DEFEND_MANA_BONUS])
+
+
 func _do_buff(hero: Dictionary, ability: Dictionary) -> void:
 	var target := hero
 	if String(ability["target"]) == "ally":
@@ -332,6 +342,11 @@ func _compute_damage(attacker: Dictionary, defender: Dictionary, ability: Dictio
 	for status in attacker["statuses"]:
 		if status["id"] == "atk_up":
 			base *= float(status.get("mult", 1.5))
+	# Exposed (combo-status): målet tar mer skada av ALLA – ordningen
+	# inom rundan blir taktik (öppna med backstab, nuka sedan).
+	for status in defender["statuses"]:
+		if status["id"] == "exposed":
+			base *= float(status.get("mult", 1.35))
 	base *= rng.randf_range(0.9, 1.1)
 	return maxi(Balance.MIN_DAMAGE, int(base))
 
