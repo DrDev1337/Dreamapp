@@ -246,6 +246,23 @@ func test_party_targeting_and_support() -> void:
 	var exp_second_hit := exp_hp - int(exp_engine.enemies[0]["hp"])
 	check(exp_second_hit > base_second_hit, "exponerade mål tar mer skada (+35%)")
 
+	# Sticky intents: fienden byter inte mål bara för att spelaren agerar –
+	# bara när målet blivit ogiltigt (fallen hjälte, ny taunt).
+	var sticky_engine := CombatEngine.new()
+	sticky_engine.setup(_make_party_combat(), [Enemies.spawn("stone_golem", 1)], 13)
+	sticky_engine.advance_until_player_turn()
+	var first_target := int(sticky_engine.enemies[0]["intent"]["target"])
+	for i in 3:
+		sticky_engine.player_action("basic_attack", -1)
+		check(
+			int(sticky_engine.enemies[0]["intent"]["target"]) == first_target,
+			"intent-målet ligger fast under rundan (handling %d)" % (i + 1)
+		)
+	sticky_engine.heroes[first_target]["hp"] = 0
+	sticky_engine.player_action("basic_attack", -1)
+	var new_target := int(sticky_engine.enemies[0]["intent"]["target"])
+	check(new_target != first_target and new_target >= 0, "fallet mål ger nytt giltigt mål")
+
 	# Weakened (Curse/Cutting Words): fienden slår -30% och intenten visar det.
 	var weak_engine := CombatEngine.new()
 	weak_engine.setup(_make_party_combat(), [Enemies.spawn("stone_golem", 1)], 14)

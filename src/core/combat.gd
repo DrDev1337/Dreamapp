@@ -452,25 +452,28 @@ func plan_intents() -> void:
 
 
 ## Hjältehandlingar kan ändra läget (taunt, dödade fiender) – fiender
-## som inte agerat än den här rundan tänker om.
+## som inte agerat än den här rundan tänker om. Målet är STICKY: den
+## telegraferade intentionen byter bara mål om det blivit ogiltigt
+## (fallen hjälte, ny taunt) – annars känns intents slumpmässiga.
 func _replan_pending_intents() -> void:
 	for i in enemies.size():
 		var enemy: Dictionary = enemies[i]
 		if enemy["hp"] > 0 and not enemy.get("acted", false):
-			enemy["intent"] = _decide_action(enemy, round_number)
+			var current := int(enemy.get("intent", {}).get("target", -1))
+			enemy["intent"] = _decide_action(enemy, round_number, current)
 
 
-func _decide_action(enemy: Dictionary, acting_round: int) -> Dictionary:
+func _decide_action(enemy: Dictionary, acting_round: int, preferred := -1) -> Dictionary:
 	for status in enemy["statuses"]:
 		if status["id"] == "stun":
 			return {"kind": "stunned", "label": "Stunned", "target": -1}
-	var special := _special_action(enemy, acting_round)
+	var special := _special_action(enemy, acting_round, preferred)
 	if not special.is_empty():
 		return special
-	return _attack_intent(enemy, 1.0, "attack")
+	return _attack_intent(enemy, 1.0, "attack", preferred)
 
 
-func _special_action(enemy: Dictionary, acting_round: int) -> Dictionary:
+func _special_action(enemy: Dictionary, acting_round: int, preferred := -1) -> Dictionary:
 	match String(enemy["behavior"]):
 		"healer":
 			var wounded := _most_wounded_ally()
@@ -482,18 +485,18 @@ func _special_action(enemy: Dictionary, acting_round: int) -> Dictionary:
 				return {"kind": "guard", "label": "Guard", "target": -1}
 		"berserker":
 			if enemy["hp"] < enemy["max_hp"] * 0.5:
-				return _attack_intent(enemy, 2.0, "frenzy")
+				return _attack_intent(enemy, 2.0, "frenzy", preferred)
 		"miniboss":
 			if acting_round % 3 == 0:
-				return _attack_intent(enemy, 1.8, "heavy")
+				return _attack_intent(enemy, 1.8, "heavy", preferred)
 		"boss":
 			if int(enemy.get("phase", 1)) == 2 and acting_round % 2 == 0:
-				return _attack_intent(enemy, 0.9, "double")
+				return _attack_intent(enemy, 0.9, "double", preferred)
 	return {}
 
 
-func _attack_intent(enemy: Dictionary, mult: float, kind: String) -> Dictionary:
-	var target := _pick_hero_target(enemy)
+func _attack_intent(enemy: Dictionary, mult: float, kind: String, preferred := -1) -> Dictionary:
+	var target := _pick_hero_target(enemy, preferred)
 	if target < 0:
 		return {"kind": kind, "label": "Attack", "target": -1}
 	var est := _estimate_damage(enemy, mult, String(enemy["behavior"]) == "ranged", target)
@@ -513,7 +516,8 @@ func _attack_intent(enemy: Dictionary, mult: float, kind: String) -> Dictionary:
 
 
 ## Melee når bara frontraden (om någon lever); taunt tvingar målet.
-func _pick_hero_target(enemy: Dictionary) -> int:
+## preferred = nuvarande telegraferat mål – behålls om det är giltigt.
+func _pick_hero_target(enemy: Dictionary, preferred := -1) -> int:
 	for status in enemy["statuses"]:
 		if status["id"] == "taunt":
 			var idx := int(status.get("hero_index", -1))
@@ -522,11 +526,14 @@ func _pick_hero_target(enemy: Dictionary) -> int:
 	var alive := living_heroes()
 	if alive.is_empty():
 		return -1
+	var candidates := alive
 	if String(enemy["behavior"]) in MELEE_BEHAVIORS:
 		var front: Array = alive.filter(func(i): return String(heroes[i]["row"]) == "front")
 		if not front.is_empty():
-			return front[rng.randi_range(0, front.size() - 1)]
-	return alive[rng.randi_range(0, alive.size() - 1)]
+			candidates = front
+	if preferred in candidates:
+		return preferred
+	return candidates[rng.randi_range(0, candidates.size() - 1)]
 
 
 func _estimate_damage(enemy: Dictionary, mult: float, ignore_half_armor: bool, target: int) -> int:

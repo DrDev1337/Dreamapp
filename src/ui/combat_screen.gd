@@ -30,11 +30,22 @@ var ability_buttons := {}  # ability_id -> Button
 
 ## Ritar hotlinjer från varje fiende till hjälten den siktar på
 ## (Slice & Dice-mönstret: koppla hot visuellt, inte i text).
+## Animerad: strecken flödar mot målet och ringen vid offret pulserar.
 class ThreatOverlay:
 	extends Control
+	const DASH := 9.0
+	const GAP := 8.0
 	var pairs: Array = []  # [{"from": Control, "to": Control}]
+	var _phase := 0.0
+
+	func _process(delta: float) -> void:
+		if pairs.is_empty():
+			return
+		_phase = fmod(_phase + delta * 26.0, DASH + GAP)
+		queue_redraw()
 
 	func _draw() -> void:
+		var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() * 0.006)
 		for pair in pairs:
 			var from: Control = pair["from"]
 			var to: Control = pair["to"]
@@ -44,9 +55,24 @@ class ThreatOverlay:
 				from.global_position + Vector2(from.size.x * 0.5, from.size.y - 4) - global_position
 			)
 			var stop: Vector2 = to.global_position + Vector2(to.size.x * 0.5, 2) - global_position
-			var color := Color(0.95, 0.4, 0.4, 0.4)
-			draw_line(start, stop, color, 3.0, true)
-			draw_circle(stop, 5.0, color)
+			var direction := stop - start
+			var length := direction.length()
+			if length < 1.0:
+				continue
+			direction /= length
+			var color := Color(0.95, 0.4, 0.4, 0.35 + 0.2 * pulse)
+			# Flödande streck som "vandrar" mot hjälten som ska träffas.
+			var offset := _phase - (DASH + GAP)
+			while offset < length:
+				var seg_start := maxf(offset, 0.0)
+				var seg_end := clampf(offset + DASH, 0.0, length)
+				if seg_end > seg_start:
+					draw_line(
+						start + direction * seg_start, start + direction * seg_end, color, 3.0, true
+					)
+				offset += DASH + GAP
+			draw_circle(stop, 4.0, color)
+			draw_arc(stop, 7.0 + 3.0 * pulse, 0, TAU, 20, color, 2.0, true)
 
 
 func build() -> void:
@@ -462,9 +488,16 @@ func _select_hero(index: int) -> void:
 func _use_ability(ability_id: String) -> void:
 	var hero_hp_before: Array = engine.heroes.map(func(h): return int(h["hp"]))
 	var enemy_hp_before: Array = engine.enemies.map(func(e): return int(e["hp"]))
+	var enemy_acted_before: Array = engine.enemies.map(func(e): return e.get("acted", false))
 	if not engine.player_action(ability_id, selected_target):
 		return
 	Game.save_game()  # autosave efter varje handling (US-11.2)
+
+	# Fiender som tog sin tur gör ett utfall mot hjältarna.
+	for i in engine.enemies.size():
+		var took_turn: bool = not enemy_acted_before[i] and engine.enemies[i].get("acted", false)
+		if took_turn and int(engine.enemies[i]["hp"]) > 0:
+			_lunge(enemy_widgets[i]["button"])
 
 	# Juice: skadesiffror, skak och blixt utifrån vad som faktiskt hände.
 	for i in engine.enemies.size():
@@ -512,6 +545,14 @@ func _spawn_floater(anchor: Control, text: String, color: Color) -> void:
 	tween.tween_property(label, "position:y", label.position.y - 60, 0.8).set_ease(Tween.EASE_OUT)
 	tween.tween_property(label, "modulate:a", 0.0, 0.8).set_ease(Tween.EASE_IN)
 	tween.chain().tween_callback(label.queue_free)
+
+
+## Utfall: fienden kastar sig nedåt mot hjältarna och studsar tillbaka.
+func _lunge(node: Control) -> void:
+	var origin := node.position
+	var tween := create_tween()
+	tween.tween_property(node, "position:y", origin.y + 16, 0.09).set_ease(Tween.EASE_OUT)
+	tween.tween_property(node, "position:y", origin.y, 0.18).set_ease(Tween.EASE_IN)
 
 
 func _shake(node: Control) -> void:
