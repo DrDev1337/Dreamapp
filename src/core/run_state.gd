@@ -90,8 +90,29 @@ func deeper_lock_reason(party: PartyState) -> String:
 	return ""
 
 
+## Synkar stridsvärdena mot partyt: nya nivåer, level-up-val, köp och
+## förmågor (inkl. universella som defend) ska gälla direkt – inte
+## först nästa run. HP/mana-avdrag bevaras, fallna förblir nere.
+func refresh_heroes(party: PartyState) -> void:
+	for i in mini(party.heroes.size(), heroes_combat.size()):
+		var hero: Hero = party.heroes[i]
+		var hero_combat: Dictionary = heroes_combat[i]
+		var hp_missing := int(hero_combat["max_hp"]) - int(hero_combat["hp"])
+		var mana_missing := int(hero_combat["max_mana"]) - int(hero_combat["mana"])
+		var was_down := int(hero_combat["hp"]) <= 0
+		for stat in ["max_hp", "attack", "magic", "speed", "armor", "max_mana"]:
+			hero_combat[stat] = hero.total_stat(stat, party)
+		for boost in active_boosts:
+			if boost.has("start_hp_bonus"):
+				hero_combat["max_hp"] = int(hero_combat["max_hp"]) + int(boost["start_hp_bonus"])
+		hero_combat["hp"] = 0 if was_down else maxi(1, int(hero_combat["max_hp"]) - hp_missing)
+		hero_combat["mana"] = maxi(0, int(hero_combat["max_mana"]) - mana_missing)
+		hero_combat["ability_ids"] = hero.combat_ability_ids()
+
+
 ## Går in i nästa rum. Returnerar en händelsebeskrivning till UI:t.
 func enter_next_room(party: PartyState) -> Dictionary:
+	refresh_heroes(party)
 	current_depth += 1
 	var room := current_room()
 	var event := {

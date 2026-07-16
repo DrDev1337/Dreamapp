@@ -23,6 +23,7 @@ func _init() -> void:
 	test_enemy_intents()
 	test_hero_and_classing()
 	test_run_generation()
+	test_mid_run_refresh()
 	test_dungeons()
 	test_essence_death_and_recovery()
 	test_upgrades()
@@ -427,6 +428,33 @@ func test_run_generation() -> void:
 	rng2.seed = 999
 	var other := RunGenerator.generate(rng2)
 	check(other[7]["type"] == "boss", "fasta regler gäller oavsett seed")
+
+
+## Level-up-val, köp och nya förmågor ska nå striden i NÄSTA rum –
+## inte först nästa run (buggrapport: "fick inte min ability").
+func test_mid_run_refresh() -> void:
+	print("Mid-run refresh…")
+	var party := PartyState.create(["A", "B", "C", "D", "E"])
+	party.level = 10
+	var run := RunState.start(party, 51)
+	check("defend" in run.heroes_combat[0]["ability_ids"], "defend finns för alla från start")
+	# Simulera en level-up mitt i runnen: ny förmåga + stats på hjälte 0.
+	party.heroes[0].learn_ability("firebolt")
+	party.heroes[0].bonus_stats["max_hp"] = int(party.heroes[0].bonus_stats["max_hp"]) + 8
+	# Simulera en gammal save utan defend i stridslistan.
+	run.heroes_combat[1]["ability_ids"] = ["basic_attack"]
+	run.heroes_combat[0]["hp"] = int(run.heroes_combat[0]["hp"]) - 5
+	run.enter_next_room(party)
+	check("firebolt" in run.combat.heroes[0]["ability_ids"], "nivåvalets förmåga gäller direkt")
+	check(
+		int(run.combat.heroes[0]["max_hp"]) == party.heroes[0].total_stat("max_hp", party),
+		"nivåvalets stats gäller direkt"
+	)
+	check(
+		int(run.combat.heroes[0]["hp"]) == int(run.combat.heroes[0]["max_hp"]) - 5,
+		"HP-avdraget bevaras vid resynk"
+	)
+	check("defend" in run.combat.heroes[1]["ability_ids"], "gamla saves får defend vid rumsbyte")
 
 
 func test_dungeons() -> void:
