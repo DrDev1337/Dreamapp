@@ -313,16 +313,36 @@ func test_party_targeting_and_support() -> void:
 				buffed += 1
 	check(buffed == Balance.PARTY_SIZE, "inspire buffar hela partyt")
 
-	# Revive: nekas utan fallen hjälte, väcker annars den första fallna.
+	# Manuell ally-targeting: spelaren pekar ut mottagaren (targeting-
+	# flödet "förmåga först, mål sen"); -1 = auto-fallback för AI.
+	var aim_heroes := _make_party_combat()
+	aim_heroes[2]["ability_ids"] = ["basic_attack", "mend"]
+	var aim_engine := CombatEngine.new()
+	aim_engine.setup(aim_heroes, [Enemies.spawn("stone_golem", 1)], 18)
+	aim_engine.heroes[0]["hp"] = 10
+	aim_engine.heroes[1]["hp"] = 20
+	for i in 2:
+		aim_engine.advance_until_player_turn()
+		aim_engine.player_action("basic_attack", 0)
+	aim_engine.advance_until_player_turn()
+	aim_engine.player_action("mend", 1)
+	check(
+		int(aim_engine.heroes[1]["hp"]) == 30, "mend kan riktas mot vald allierad (klampas vid max)"
+	)
+	check(int(aim_engine.heroes[0]["hp"]) == 10, "auto-målet (mest skadad) rörs inte då")
+
+	# Revive: nekas utan fallen hjälte; spelaren kan välja vem som väcks.
 	var revive_heroes := _make_party_combat()
 	revive_heroes[0]["ability_ids"] = ["basic_attack", "resurrect"]
 	var revive_engine := CombatEngine.new()
 	revive_engine.setup(revive_heroes, [Enemies.spawn("stone_golem", 1)], 9)
 	revive_engine.advance_until_player_turn()
 	check(not revive_engine.player_action("resurrect", -1), "revive nekas utan fallen hjälte")
+	revive_engine.heroes[3]["hp"] = 0
 	revive_engine.heroes[4]["hp"] = 0
-	check(revive_engine.player_action("resurrect", -1), "revive tillåts med fallen hjälte")
-	check(int(revive_engine.heroes[4]["hp"]) == 15, "hjälten väcks på halv styrka")
+	check(revive_engine.player_action("resurrect", 4), "revive tillåts med fallen hjälte")
+	check(int(revive_engine.heroes[4]["hp"]) == 15, "VALD hjälte väcks på halv styrka")
+	check(int(revive_engine.heroes[3]["hp"]) == 0, "andra fallna förblir nere")
 
 
 func test_enemy_intents() -> void:

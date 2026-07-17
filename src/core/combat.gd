@@ -227,13 +227,13 @@ func player_action(ability_id: String, target_index: int) -> bool:
 func _execute_hero_ability(hero: Dictionary, ability: Dictionary, target_index: int) -> void:
 	match String(ability["kind"]):
 		"heal":
-			_do_heal(hero, ability)
+			_do_heal(hero, ability, target_index)
 		"revive":
-			_do_revive(hero, ability)
+			_do_revive(hero, ability, target_index)
 		"taunt":
 			_do_taunt(hero, ability)
 		"buff":
-			_do_buff(hero, ability)
+			_do_buff(hero, ability, target_index)
 		"defend":
 			_do_defend(hero)
 		_:
@@ -287,16 +287,17 @@ func _consume_mark(enemy: Dictionary, damage: int) -> int:
 	return damage
 
 
-## Heal går automatiskt till mest skadad levande hjälte (party_design.md).
-func _do_heal(hero: Dictionary, ability: Dictionary) -> void:
+## Heal: spelaren kan peka ut en allierad (target_index); annars går
+## den automatiskt till mest skadad levande hjälte (fallback för AI).
+func _do_heal(hero: Dictionary, ability: Dictionary, target_index := -1) -> void:
 	var amount := maxi(1, int(float(ability["power"]) * float(hero["magic"])))
 	var targets: Array = []
 	if String(ability["target"]) == "all_allies":
 		targets = living_heroes()
 	else:
-		var most_wounded := _most_wounded_hero()
-		if most_wounded >= 0:
-			targets = [most_wounded]
+		var chosen := target_index if target_index in living_heroes() else _most_wounded_hero()
+		if chosen >= 0:
+			targets = [chosen]
 	for i in targets:
 		var ally: Dictionary = heroes[i]
 		var healed: int = mini(int(ally["max_hp"]), int(ally["hp"]) + amount) - int(ally["hp"])
@@ -304,11 +305,12 @@ func _do_heal(hero: Dictionary, ability: Dictionary) -> void:
 		log.append("%s heals %s for %d HP." % [hero["name"], ally["name"], healed])
 
 
-func _do_revive(hero: Dictionary, ability: Dictionary) -> void:
+func _do_revive(hero: Dictionary, ability: Dictionary, target_index := -1) -> void:
 	var downed := downed_heroes()
 	if downed.is_empty():
 		return
-	var ally: Dictionary = heroes[downed[0]]
+	var chosen: int = target_index if target_index in downed else downed[0]
+	var ally: Dictionary = heroes[chosen]
 	ally["hp"] = maxi(1, int(float(ally["max_hp"]) * float(ability["power"])))
 	ally["statuses"] = []
 	log.append("%s resurrects %s!" % [hero["name"], ally["name"]])
@@ -332,7 +334,7 @@ func _do_defend(hero: Dictionary) -> void:
 	log.append("%s braces and focuses (+%d mana)." % [hero["name"], Balance.DEFEND_MANA_BONUS])
 
 
-func _do_buff(hero: Dictionary, ability: Dictionary) -> void:
+func _do_buff(hero: Dictionary, ability: Dictionary, target_index := -1) -> void:
 	# Bard-mönstret: sånger buffar hela partyt.
 	if String(ability["target"]) == "all_allies":
 		for i in living_heroes():
@@ -341,9 +343,9 @@ func _do_buff(hero: Dictionary, ability: Dictionary) -> void:
 		return
 	var target := hero
 	if String(ability["target"]) == "ally":
-		var most_wounded := _most_wounded_hero()
-		if most_wounded >= 0:
-			target = heroes[most_wounded]
+		var chosen := target_index if target_index in living_heroes() else _most_wounded_hero()
+		if chosen >= 0:
+			target = heroes[chosen]
 	target["statuses"].append(ability["status"].duplicate())
 	log.append("%s uses %s on %s." % [hero["name"], ability["name"], target["name"]])
 

@@ -12,7 +12,11 @@ const CARD_BG := Color(0.09, 0.075, 0.13, 0.9)
 const CARD_BORDER_IDLE := Color(1, 1, 1, 0.08)
 const COLOR_THREAT := Color("ff6b6b")
 
-var selected_target := 0
+# Targeting-flöde: tryck på förmågan FÖRST (armed_ability), sedan på
+# målet – fiende eller allierad beroende på förmågan. Tryck på samma
+# förmåga igen för att avbryta. Direktförmågor (AoE, self, defend)
+# utförs omedelbart.
+var armed_ability := ""
 var victory_rewards := {}
 # Cachad motor-referens: Game.run.combat nollas av on_combat_victory().
 var engine: CombatEngine = null
@@ -97,9 +101,9 @@ func build() -> void:
 		Game.mark_tutorial_seen("combat_intro")
 		var hint := (
 			"Every hero acts once per round, in any order you like - "
-			+ "tap a hero to act with them. Tap an enemy to choose your "
-			+ "TARGET, then tap an ability. Red lines show who the "
-			+ "enemies plan to strike."
+			+ "tap a hero to act with them. Tap an ability, then tap its "
+			+ "target (enemy or ally). Hold an ability to read what it "
+			+ "does. Red lines show who the enemies plan to strike."
 		)
 		UIKit.popup(self, "Combat", hint)
 
@@ -233,20 +237,8 @@ func _make_enemy_widget(index: int) -> Dictionary:
 	info_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	info_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.7))
 	box.add_child(info_label)
-	var target_strip := Label.new()
-	target_strip.text = "TARGET"
-	target_strip.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	target_strip.add_theme_font_override("font", UIKit.FONT_BOLD)
-	target_strip.add_theme_font_size_override("font_size", 10)
-	target_strip.add_theme_color_override("font_color", UIKit.COLOR_ACCENT)
-	target_strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_child(target_strip)
 	button.add_child(box)
-	button.pressed.connect(
-		func():
-			selected_target = index
-			_refresh(false)
-	)
+	button.pressed.connect(func(): _on_enemy_tapped(index))
 	return {
 		"button": button,
 		"name_label": name_label,
@@ -257,7 +249,6 @@ func _make_enemy_widget(index: int) -> Dictionary:
 		"intent_panel": intent_panel,
 		"intent_icon": intent_icon,
 		"intent_label": intent_label,
-		"target_strip": target_strip,
 	}
 
 
@@ -331,7 +322,7 @@ func _build_ability_grid() -> void:
 		button.add_theme_color_override("icon_normal_color", Color(1, 1, 1, 0.9))
 		button.add_theme_color_override("icon_disabled_color", Color(1, 1, 1, 0.3))
 		button.add_theme_font_size_override("font_size", 18)
-		button.pressed.connect(func(): _use_ability(id))
+		button.pressed.connect(func(): _on_ability_pressed(id))
 		button.button_down.connect(func(): _start_press(id))
 		button.button_up.connect(func(): press_timer.stop())
 		ability_buttons[id] = button
@@ -391,9 +382,13 @@ func _intent_chip(intent: Dictionary) -> String:
 
 ## Uppdaterar hela vyn mot motorns tillstånd. animate=true tweenar bars.
 func _refresh(animate: bool) -> void:
-	var alive := engine.living_enemies()
-	if selected_target not in alive and not alive.is_empty():
-		selected_target = alive[0]
+	# Armerad förmåga: giltiga mål highlightas tills spelaren valt.
+	var armed := Abilities.get_ability(armed_ability) if armed_ability != "" else {}
+	var mode := _target_mode(armed)
+	if armed_ability != "" and (engine.active_hero < 0 or engine.is_over()):
+		armed_ability = ""
+		armed = {}
+		mode = ""
 
 	order_label.text = "Round %d" % engine.round_number
 
@@ -404,19 +399,18 @@ func _refresh(animate: bool) -> void:
 		var widget: Dictionary = enemy_widgets[i]
 		var dead: bool = enemy["hp"] <= 0
 		var button: Button = widget["button"]
-		var selected: bool = i == selected_target and not dead
+		var targetable: bool = mode == "enemy" and not dead and not engine.is_over()
 		button.disabled = dead
 		button.modulate = Color(1, 1, 1, 0.3) if dead else Color.WHITE
-		var border := UIKit.COLOR_ACCENT if selected else CARD_BORDER_IDLE
+		var border := UIKit.COLOR_ACCENT if targetable else CARD_BORDER_IDLE
 		for state in ["normal", "hover", "pressed", "disabled"]:
 			button.add_theme_stylebox_override(state, _card_style(border))
-		widget["target_strip"].visible = selected and not engine.is_over()
 		var phase_mark := (
 			"  [PHASE 2]" if enemy.get("is_boss", false) and int(enemy.get("phase", 1)) == 2 else ""
 		)
 		widget["name_label"].text = "%s%s" % [enemy["name"], phase_mark]
 		widget["name_label"].add_theme_color_override(
-			"font_color", UIKit.COLOR_ACCENT if selected else Color("e8e4f0")
+			"font_color", UIKit.COLOR_ACCENT if targetable else Color("e8e4f0")
 		)
 		_set_bar(widget["hp_bar"], int(enemy["hp"]), int(enemy["max_hp"]), animate)
 		widget["hp_text"].text = "%d/%d" % [int(enemy["hp"]), int(enemy["max_hp"])]
@@ -461,8 +455,13 @@ func _refresh(animate: bool) -> void:
 		elif acted:
 			tint = Color(1, 1, 1, 0.55)
 		widget["panel"].modulate = tint
+		var ally_targetable: bool = (
+			not engine.is_over() and ((mode == "ally" and not down) or (mode == "downed" and down))
+		)
 		var border: Color = CARD_BORDER_IDLE
-		if is_active and not engine.is_over():
+		if ally_targetable:
+			border = Color("6fdb8f")
+		elif is_active and not engine.is_over():
 			border = UIKit.COLOR_ACCENT
 		elif threat > 0 and not down and not engine.is_over():
 			border = Color(COLOR_THREAT.r, COLOR_THREAT.g, COLOR_THREAT.b, 0.55)
@@ -490,7 +489,14 @@ func _refresh(animate: bool) -> void:
 
 	var active := engine.active_hero
 	if active >= 0 and not engine.is_over():
-		turn_label.text = "%s's turn  ·  tap a hero to swap" % engine.heroes[active]["name"]
+		if mode == "enemy":
+			turn_label.text = "%s: tap an enemy  ·  tap again to cancel" % armed["name"]
+		elif mode == "ally":
+			turn_label.text = "%s: tap a hero  ·  tap again to cancel" % armed["name"]
+		elif mode == "downed":
+			turn_label.text = "%s: tap a fallen hero" % armed["name"]
+		else:
+			turn_label.text = "%s's turn  ·  tap a hero to swap" % engine.heroes[active]["name"]
 	else:
 		turn_label.text = ""
 
@@ -517,6 +523,9 @@ func _refresh(animate: bool) -> void:
 		if cooldown > 0:
 			text += "\nrecharge: %d turns" % cooldown
 		button.text = text
+		button.add_theme_color_override(
+			"font_color", UIKit.COLOR_ACCENT if id == armed_ability else Color("e8e4f0")
+		)
 		var unusable := (
 			cooldown > 0
 			or int(hero["mana"]) < int(ability["mana_cost"])
@@ -548,20 +557,71 @@ func _set_bar(bar: ProgressBar, value: int, max_value: int, animate: bool) -> vo
 		bar.value = value
 
 
-func _select_hero(index: int) -> void:
-	if engine != null and engine.select_actor(index):
-		_refresh(false)
+## Vilken sorts mål en förmåga behöver väljas åt: "" = ingen (utförs
+## direkt), "enemy", "ally" (levande) eller "downed" (fallen, revive).
+func _target_mode(ability: Dictionary) -> String:
+	if ability.is_empty():
+		return ""
+	var kind := String(ability["kind"])
+	if kind == "revive":
+		return "downed"
+	if kind in ["physical", "magic"] and String(ability["target"]) == "enemy":
+		return "enemy"
+	if kind in ["heal", "buff"] and String(ability["target"]) == "ally":
+		return "ally"
+	return ""
 
 
-func _use_ability(ability_id: String) -> void:
+## Tryck på förmåga: armera målval, avbryt, eller utför direkt.
+func _on_ability_pressed(ability_id: String) -> void:
 	# Släpp efter long-press = tooltipen visades, använd inte förmågan.
 	if _long_press_fired:
 		_long_press_fired = false
 		return
+	if armed_ability == ability_id:
+		armed_ability = ""
+		_refresh(false)
+		return
+	if _target_mode(Abilities.get_ability(ability_id)) == "":
+		armed_ability = ""
+		_execute_ability(ability_id, -1)
+	else:
+		armed_ability = ability_id
+		_refresh(false)
+
+
+func _on_enemy_tapped(index: int) -> void:
+	if armed_ability == "" or _target_mode(Abilities.get_ability(armed_ability)) != "enemy":
+		return
+	if int(engine.enemies[index]["hp"]) <= 0:
+		return
+	var ability_id := armed_ability
+	armed_ability = ""
+	_execute_ability(ability_id, index)
+
+
+func _select_hero(index: int) -> void:
+	if engine == null:
+		return
+	# Armerad ally-förmåga: hjältetryck = välj mottagare.
+	var mode := _target_mode(Abilities.get_ability(armed_ability)) if armed_ability != "" else ""
+	if mode == "ally" or mode == "downed":
+		var down: bool = int(engine.heroes[index]["hp"]) <= 0
+		if (mode == "ally" and not down) or (mode == "downed" and down):
+			var ability_id := armed_ability
+			armed_ability = ""
+			_execute_ability(ability_id, index)
+		return
+	if engine.select_actor(index):
+		armed_ability = ""
+		_refresh(false)
+
+
+func _execute_ability(ability_id: String, target: int) -> void:
 	var hero_hp_before: Array = engine.heroes.map(func(h): return int(h["hp"]))
 	var enemy_hp_before: Array = engine.enemies.map(func(e): return int(e["hp"]))
 	var enemy_acted_before: Array = engine.enemies.map(func(e): return e.get("acted", false))
-	if not engine.player_action(ability_id, selected_target):
+	if not engine.player_action(ability_id, target):
 		return
 	Game.save_game()  # autosave efter varje handling (US-11.2)
 
