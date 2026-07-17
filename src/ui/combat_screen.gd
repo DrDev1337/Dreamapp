@@ -98,13 +98,16 @@ func build() -> void:
 		UIKit.popup(self, "Combat", hint)
 
 
+## Layout (mobil): fiender och hjältar TÄTT ihop – hotlinjerna får en
+## egen smal korridor mellan raderna och korsar aldrig text. Loggen
+## ligger nedanför som diskret ticker, knapparna längst ner.
 func _build_structure() -> void:
 	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 8)
+	layout.add_theme_constant_override("separation", 6)
 	add_child(UIKit.vmargin(layout, 14))
 
-	order_label = UIKit.body("", 14)
-	order_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.6))
+	order_label = UIKit.body("", 13)
+	order_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.55))
 	layout.add_child(order_label)
 
 	var enemies_row := HBoxContainer.new()
@@ -116,13 +119,8 @@ func _build_structure() -> void:
 		enemy_widgets.append(widget)
 	layout.add_child(enemies_row)
 
-	var log_panel := UIKit.panel(Color(0, 0, 0, 0.3))
-	log_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	log_label = UIKit.body("", 13)
-	log_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.75))
-	log_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	log_panel.add_child(log_label)
-	layout.add_child(log_panel)
+	# Hotlinjernas korridor – enda ytan linjerna korsar.
+	layout.add_child(UIKit.spacer(16))
 
 	var heroes_row := HBoxContainer.new()
 	heroes_row.add_theme_constant_override("separation", 6)
@@ -132,6 +130,16 @@ func _build_structure() -> void:
 		heroes_row.add_child(widget["panel"])
 		hero_widgets.append(widget)
 	layout.add_child(heroes_row)
+
+	var log_panel := UIKit.panel(Color(0, 0, 0, 0.25))
+	log_label = UIKit.body("", 12)
+	log_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.6))
+	log_panel.add_child(log_label)
+	layout.add_child(log_panel)
+
+	var filler := Control.new()
+	filler.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	layout.add_child(filler)
 
 	turn_label = UIKit.body("", 17)
 	turn_label.add_theme_color_override("font_color", UIKit.COLOR_ACCENT)
@@ -183,34 +191,38 @@ func _make_enemy_widget(index: int) -> Dictionary:
 	var enemy: Dictionary = engine.enemies[index]
 	var button := Button.new()
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	button.custom_minimum_size = Vector2(0, 168)
+	button.custom_minimum_size = Vector2(0, 148)
 	var box := VBoxContainer.new()
 	box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	box.add_theme_constant_override("separation", 3)
-	# Intentionen (StS-mönstret): ikon + STOR siffra, ingen mening.
+	box.add_theme_constant_override("separation", 2)
+	# Intentionen (StS-mönstret): färgad pill med ikon + STOR siffra.
+	var intent_panel := PanelContainer.new()
+	intent_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	intent_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var intent_row := HBoxContainer.new()
 	intent_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	intent_row.add_theme_constant_override("separation", 5)
-	var intent_icon := Icons.image(Icons.INTENT["attack"], 22)
+	intent_row.add_theme_constant_override("separation", 4)
+	var intent_icon := Icons.image(Icons.INTENT["attack"], 18)
 	intent_row.add_child(intent_icon)
 	var intent_label := Label.new()
 	intent_label.add_theme_font_override("font", UIKit.FONT_BOLD)
-	intent_label.add_theme_font_size_override("font_size", 20)
+	intent_label.add_theme_font_size_override("font_size", 17)
 	intent_row.add_child(intent_label)
-	box.add_child(intent_row)
+	intent_panel.add_child(intent_row)
+	box.add_child(intent_panel)
 	var icon_texture: Texture2D = Icons.ENEMY.get(enemy["id"], Icons.SKULL)
 	var tint: Color = Icons.ENEMY_TINT.get(enemy["id"], Color.WHITE)
-	var icon := Icons.image(icon_texture, 46, tint)
+	var icon := Icons.image(icon_texture, 42, tint)
 	icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	box.add_child(icon)
-	var name_label := UIKit.body(String(enemy["name"]), 13)
+	var name_label := UIKit.body(String(enemy["name"]), 12)
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(name_label)
-	var hp := _bar_with_text(int(enemy["hp"]), int(enemy["max_hp"]), UIKit.COLOR_HP, 15)
+	var hp := _bar_with_text(int(enemy["hp"]), int(enemy["max_hp"]), UIKit.COLOR_HP, 14)
 	box.add_child(hp["bar"])
-	var info_label := UIKit.body("", 11)
+	var info_label := UIKit.body("", 10)
 	info_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	info_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.7))
 	box.add_child(info_label)
@@ -218,7 +230,7 @@ func _make_enemy_widget(index: int) -> Dictionary:
 	target_strip.text = "TARGET"
 	target_strip.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	target_strip.add_theme_font_override("font", UIKit.FONT_BOLD)
-	target_strip.add_theme_font_size_override("font_size", 11)
+	target_strip.add_theme_font_size_override("font_size", 10)
 	target_strip.add_theme_color_override("font_color", UIKit.COLOR_ACCENT)
 	target_strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(target_strip)
@@ -234,7 +246,8 @@ func _make_enemy_widget(index: int) -> Dictionary:
 		"hp_bar": hp["bar"],
 		"hp_text": hp["text"],
 		"info_label": info_label,
-		"intent_row": intent_row,
+		"intent_row": intent_panel,
+		"intent_panel": intent_panel,
 		"intent_icon": intent_icon,
 		"intent_label": intent_label,
 		"target_strip": target_strip,
@@ -245,7 +258,7 @@ func _make_hero_widget(index: int) -> Dictionary:
 	var hero: Dictionary = engine.heroes[index]
 	var panel := PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	panel.custom_minimum_size = Vector2(0, 108)
+	panel.custom_minimum_size = Vector2(0, 96)
 	# Tappbar: spelaren väljer vem som agerar på partyts tur.
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	panel.gui_input.connect(
@@ -364,7 +377,9 @@ func _refresh(animate: bool) -> void:
 		)
 		_set_bar(widget["hp_bar"], int(enemy["hp"]), int(enemy["max_hp"]), animate)
 		widget["hp_text"].text = "%d/%d" % [int(enemy["hp"]), int(enemy["max_hp"])]
-		widget["info_label"].text = _status_text(enemy)
+		var enemy_status := _status_text(enemy)
+		widget["info_label"].text = enemy_status
+		widget["info_label"].visible = enemy_status != ""
 		var intent: Dictionary = enemy.get("intent", {})
 		var intent_kind := String(intent.get("kind", ""))
 		var show_intent := intent_kind != "" and not dead and not engine.is_over()
@@ -375,6 +390,14 @@ func _refresh(animate: bool) -> void:
 			widget["intent_icon"].modulate = tint
 			widget["intent_label"].text = _intent_chip(intent)
 			widget["intent_label"].add_theme_color_override("font_color", tint)
+			var pill := StyleBoxFlat.new()
+			pill.bg_color = Color(tint.r, tint.g, tint.b, 0.16)
+			pill.set_corner_radius_all(9)
+			pill.content_margin_left = 9
+			pill.content_margin_right = 9
+			pill.content_margin_top = 1
+			pill.content_margin_bottom = 1
+			widget["intent_panel"].add_theme_stylebox_override("panel", pill)
 			var threat_target := int(intent.get("target", -1))
 			if threat_target >= 0 and threat_target < hero_widgets.size():
 				incoming[threat_target] = (
@@ -414,11 +437,13 @@ func _refresh(animate: bool) -> void:
 		var row_tag := "F" if String(hero.get("row", "back")) == "front" else "B"
 		var status := _status_text(hero)
 		widget["info_label"].text = row_tag + ("  " + status if status != "" else "")
-		widget["threat_label"].text = (
+		var threat_text := (
 			"-%d" % threat if threat > 0 and not down and not engine.is_over() else ""
 		)
+		widget["threat_label"].text = threat_text
+		widget["threat_label"].visible = threat_text != ""
 
-	log_label.text = "\n".join(engine.log.slice(maxi(0, engine.log.size() - 4)))
+	log_label.text = "\n".join(engine.log.slice(maxi(0, engine.log.size() - 2)))
 
 	var active := engine.active_hero
 	if active >= 0 and not engine.is_over():
