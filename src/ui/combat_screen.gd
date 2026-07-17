@@ -27,6 +27,12 @@ var turn_label: Label
 var bottom_area: VBoxContainer
 var ability_buttons := {}  # ability_id -> Button
 
+# Long-press på en förmågeknapp visar förklaringen i stället för att
+# använda förmågan (mobilkonvention för tooltips).
+var press_timer: Timer
+var _press_ability_id := ""
+var _long_press_fired := false
+
 
 ## Ritar hotlinjer från varje fiende till hjälten den siktar på
 ## (Slice & Dice-mönstret: koppla hot visuellt, inte i text).
@@ -119,8 +125,9 @@ func _build_structure() -> void:
 		enemy_widgets.append(widget)
 	layout.add_child(enemies_row)
 
-	# Hotlinjernas korridor – enda ytan linjerna korsar.
-	layout.add_child(UIKit.spacer(16))
+	# Hotlinjernas korridor – enda ytan linjerna korsar. Tillräckligt
+	# hög för att linjernas riktning ska gå att följa med ögat.
+	layout.add_child(UIKit.spacer(36))
 
 	var heroes_row := HBoxContainer.new()
 	heroes_row.add_theme_constant_override("separation", 6)
@@ -325,9 +332,45 @@ func _build_ability_grid() -> void:
 		button.add_theme_color_override("icon_disabled_color", Color(1, 1, 1, 0.3))
 		button.add_theme_font_size_override("font_size", 18)
 		button.pressed.connect(func(): _use_ability(id))
+		button.button_down.connect(func(): _start_press(id))
+		button.button_up.connect(func(): press_timer.stop())
 		ability_buttons[id] = button
 		grid.add_child(button)
 	bottom_area.add_child(grid)
+
+	press_timer = Timer.new()
+	press_timer.one_shot = true
+	press_timer.wait_time = 0.45
+	press_timer.timeout.connect(_show_ability_info)
+	add_child(press_timer)
+
+
+func _start_press(ability_id: String) -> void:
+	_press_ability_id = ability_id
+	_long_press_fired = false
+	press_timer.start()
+
+
+## Håll inne = förklaring (namn, effekt, kostnad, cooldown).
+func _show_ability_info() -> void:
+	_long_press_fired = true
+	var ability := Abilities.get_ability(_press_ability_id)
+	if ability.is_empty():
+		return
+	var parts: Array = [String(ability["desc"])]
+	var stat_bits: Array = []
+	if int(ability["mana_cost"]) > 0:
+		stat_bits.append("Mana: %d" % int(ability["mana_cost"]))
+	if int(ability["cooldown"]) > 0:
+		stat_bits.append("Recharge: %d turns" % int(ability["cooldown"]))
+	if float(ability["power"]) > 0.0 and String(ability["kind"]) in ["physical", "magic", "heal"]:
+		var stat_name := "magic" if String(ability["kind"]) in ["magic", "heal"] else "attack"
+		stat_bits.append("Power: %.1f x %s" % [float(ability["power"]), stat_name])
+	if int(ability.get("hits", 1)) > 1:
+		stat_bits.append("Hits: %d" % int(ability["hits"]))
+	if not stat_bits.is_empty():
+		parts.append("  ·  ".join(stat_bits))
+	UIKit.popup(self, String(ability["name"]), "\n".join(parts))
 
 
 ## Intent-chip: attacker visar bara siffran, övrigt ett kort ord.
@@ -511,6 +554,10 @@ func _select_hero(index: int) -> void:
 
 
 func _use_ability(ability_id: String) -> void:
+	# Släpp efter long-press = tooltipen visades, använd inte förmågan.
+	if _long_press_fired:
+		_long_press_fired = false
+		return
 	var hero_hp_before: Array = engine.heroes.map(func(h): return int(h["hp"]))
 	var enemy_hp_before: Array = engine.enemies.map(func(e): return int(e["hp"]))
 	var enemy_acted_before: Array = engine.enemies.map(func(e): return e.get("acted", false))

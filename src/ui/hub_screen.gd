@@ -75,6 +75,10 @@ func build() -> void:
 	shop_button.pressed.connect(func(): main.show_shop("hub"))
 	layout.add_child(shop_button)
 
+	var gear_button := UIKit.big_button("Party & gear", 60)
+	gear_button.pressed.connect(main.show_party)
+	layout.add_child(gear_button)
+
 	var switch_button := UIKit.big_button("Switch party", 60)
 	switch_button.pressed.connect(main.show_slots)
 	layout.add_child(switch_button)

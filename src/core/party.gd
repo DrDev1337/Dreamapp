@@ -68,6 +68,18 @@ func clears_of(dungeon_id: String) -> int:
 	return int(dungeon_clears.get(dungeon_id, 0))
 
 
+## Byter föremål i en slot mellan två hjältar (inventory-hantering).
+## Fungerar även när ena sidan är tom = flytta föremålet.
+func swap_equipment(from_index: int, to_index: int, slot: String) -> void:
+	if from_index == to_index:
+		return
+	if from_index < 0 or from_index >= heroes.size() or to_index < 0 or to_index >= heroes.size():
+		return
+	var moved: Dictionary = heroes[from_index].equipment.get(slot, {})
+	heroes[from_index].equipment[slot] = heroes[to_index].equipment.get(slot, {})
+	heroes[to_index].equipment[slot] = moved
+
+
 func to_dict() -> Dictionary:
 	return {
 		"party_name": party_name,

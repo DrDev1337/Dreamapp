@@ -17,6 +17,7 @@ const CheckpointScreen := preload("res://src/ui/checkpoint_screen.gd")
 const LevelUpScreen := preload("res://src/ui/levelup_screen.gd")
 const DeathScreen := preload("res://src/ui/death_screen.gd")
 const VictoryScreen := preload("res://src/ui/victory_screen.gd")
+const PartyScreen := preload("res://src/ui/party_screen.gd")
 
 var current_screen: Control = null
 
@@ -87,6 +88,10 @@ func show_slots() -> void:
 
 func show_hub() -> void:
 	_goto(HubScreen)
+
+
+func show_party() -> void:
+	_goto(PartyScreen)
 
 
 func show_shop(context: String) -> void:

@@ -614,6 +614,21 @@ func test_items() -> void:
 		"föremålet är utrustat på vald hjälte"
 	)
 	check(run.unsecured_items.size() == 1, "osäkrat föremål spåras för wipe-drop (US-5.2)")
+	# Inventory-hantering: flytta/byta föremål mellan hjältar (samma slot).
+	var slot := String(common["slot"])
+	var other := (best + 1) % party.heroes.size()
+	party.swap_equipment(best, other, slot)
+	check(party.heroes[best].equipment[slot].is_empty(), "flytt tömmer avsändarens slot")
+	check(not party.heroes[other].equipment[slot].is_empty(), "flytt fyller mottagarens slot")
+	party.heroes[best].equipment[slot] = epic
+	party.swap_equipment(best, other, slot)
+	check(
+		(
+			String(party.heroes[best].equipment[slot].get("rarity", "")) == "common"
+			and String(party.heroes[other].equipment[slot].get("rarity", "")) == "epic"
+		),
+		"byte swappar föremålen – inget försvinner"
+	)
 
 
 func test_serialization() -> void:
