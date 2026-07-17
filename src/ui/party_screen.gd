@@ -36,13 +36,13 @@ func _hero_panel(party: PartyState, index: int) -> Control:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 6)
 
-	var class_label: String = LevelUp.AXIS_LABELS.get(hero.class_identity, "Recruit")
+	var identity := Icons.hero_identity(hero)
 	var header := UIKit.body(
 		(
 			"%s – %s   ·   HP %d  Atk %d  Mag %d  Arm %d"
 			% [
 				hero.hero_name,
-				class_label,
+				identity["label"],
 				hero.total_stat("max_hp", party),
 				hero.total_stat("attack", party),
 				hero.total_stat("magic", party),
@@ -51,9 +51,7 @@ func _hero_panel(party: PartyState, index: int) -> Control:
 		),
 		15
 	)
-	var emblem: Texture2D = Icons.CLASS_EMBLEM.get(hero.class_identity, Icons.STAIRS)
-	var tint: Color = UIKit.COLOR_ACCENT if hero.class_identity != "" else Color(1, 1, 1, 0.35)
-	box.add_child(Icons.labeled(emblem, header, 24, tint))
+	box.add_child(Icons.labeled(identity["texture"], header, 24, identity["tint"]))
 
 	for slot in SLOTS:
 		box.add_child(_slot_row(party, index, slot))

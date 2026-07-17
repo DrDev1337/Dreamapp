@@ -129,6 +129,37 @@ const ANVIL := preload("res://assets/icons/anvil.svg")
 const COINS := preload("res://assets/icons/coins.svg")
 
 
+## Hjältens visuella identitet: emblem + etikett kopplad till vad hen
+## ÄR – låst klass (accent), påbörjad väg (ljus) eller rekryt (dimmad).
+## Vägen härleds ur klasspoäng eller startförmågans axel.
+static func hero_identity(hero: Hero) -> Dictionary:
+	if hero.class_identity != "":
+		return {
+			"texture": CLASS_EMBLEM.get(hero.class_identity, _FIST),
+			"tint": UIKit.COLOR_ACCENT,
+			"label": LevelUp.AXIS_LABELS.get(hero.class_identity, "Hero"),
+		}
+	var best_axis := ""
+	var best := 0
+	for axis in hero.axis_points:
+		if int(hero.axis_points[axis]) > best:
+			best = int(hero.axis_points[axis])
+			best_axis = axis
+	if best_axis == "":
+		for id in hero.ability_ids:
+			var ability_axis := String(Abilities.get_ability(id).get("axis", "none"))
+			if ability_axis in CLASS_EMBLEM:
+				best_axis = ability_axis
+				break
+	if best_axis != "":
+		return {
+			"texture": CLASS_EMBLEM[best_axis],
+			"tint": Color(1, 1, 1, 0.8),
+			"label": "%s path" % LevelUp.AXIS_LABELS.get(best_axis, best_axis),
+		}
+	return {"texture": _FIST, "tint": Color(1, 1, 1, 0.4), "label": "Recruit"}
+
+
 ## Liten ikonbild för rader och paneler.
 static func image(texture: Texture2D, size := 28, tint := Color.WHITE) -> TextureRect:
 	var rect := TextureRect.new()

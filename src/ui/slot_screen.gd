@@ -118,14 +118,13 @@ func _build_party_picker() -> void:
 	for i in suggested_specs.size():
 		var spec: Dictionary = suggested_specs[i]
 		var ability := Abilities.get_ability(String(spec["ability_id"]))
-		var row_label := UIKit.body(
-			"%d. %s%s" % [i + 1, spec["name"], "   (front row)" if i < 2 else ""], 20
-		)
+		var row_label := UIKit.body("%s%s" % [spec["name"], "   (front row)" if i < 2 else ""], 20)
+		var axis_emblem: Texture2D = Icons.CLASS_EMBLEM.get(String(spec["axis"]), Icons.SKULL)
+		name_box.add_child(Icons.labeled(axis_emblem, row_label, 26, Color(1, 1, 1, 0.85)))
 		var talent_label := UIKit.body(
 			"      knows %s – %s" % [ability["name"], ability["desc"]], 13
 		)
 		talent_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.65))
-		name_box.add_child(row_label)
 		name_box.add_child(talent_label)
 	name_panel.add_child(name_box)
 	layout.add_child(name_panel)

@@ -8,8 +8,8 @@ extends ScreenBase
 ##    kortdesign med ram-markering i stället för textmarkörer.
 ## Vyn byggs EN gång och uppdateras per handling.
 
-const CARD_BG := Color(0.09, 0.075, 0.13, 0.9)
-const CARD_BORDER_IDLE := Color(1, 1, 1, 0.08)
+const CARD_BG := Color(0.14, 0.115, 0.2, 0.95)
+const CARD_BORDER_IDLE := Color(1, 1, 1, 0.1)
 const COLOR_THREAT := Color("ff6b6b")
 
 # Targeting-flöde: tryck på förmågan FÖRST (armed_ability), sedan på
@@ -202,7 +202,7 @@ func _make_enemy_widget(index: int) -> Dictionary:
 	var enemy: Dictionary = engine.enemies[index]
 	var button := Button.new()
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	button.custom_minimum_size = Vector2(0, 148)
+	button.custom_minimum_size = Vector2(0, 158)
 	var box := VBoxContainer.new()
 	box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -215,27 +215,31 @@ func _make_enemy_widget(index: int) -> Dictionary:
 	var intent_row := HBoxContainer.new()
 	intent_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	intent_row.add_theme_constant_override("separation", 4)
-	var intent_icon := Icons.image(Icons.INTENT["attack"], 18)
+	var intent_icon := Icons.image(Icons.INTENT["attack"], 20)
 	intent_row.add_child(intent_icon)
 	var intent_label := Label.new()
 	intent_label.add_theme_font_override("font", UIKit.FONT_BOLD)
-	intent_label.add_theme_font_size_override("font_size", 17)
+	intent_label.add_theme_font_size_override("font_size", 19)
 	intent_row.add_child(intent_label)
 	intent_panel.add_child(intent_row)
 	box.add_child(intent_panel)
 	var icon_texture: Texture2D = Icons.ENEMY.get(enemy["id"], Icons.SKULL)
 	var tint: Color = Icons.ENEMY_TINT.get(enemy["id"], Color.WHITE)
-	var icon := Icons.image(icon_texture, 42, tint)
+	var icon := Icons.image(icon_texture, 44, tint)
 	icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	box.add_child(icon)
-	var name_label := UIKit.body(String(enemy["name"]), 12)
+	var name_label := Label.new()
+	name_label.text = String(enemy["name"])
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.add_theme_font_override("font", UIKit.FONT_BOLD)
+	name_label.add_theme_font_size_override("font_size", 13)
+	name_label.clip_text = true
 	box.add_child(name_label)
-	var hp := _bar_with_text(int(enemy["hp"]), int(enemy["max_hp"]), UIKit.COLOR_HP, 14)
+	var hp := _bar_with_text(int(enemy["hp"]), int(enemy["max_hp"]), UIKit.COLOR_HP, 16)
 	box.add_child(hp["bar"])
-	var info_label := UIKit.body("", 10)
+	var info_label := UIKit.body("", 11)
 	info_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	info_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.7))
+	info_label.add_theme_color_override("font_color", UIKit.COLOR_WARN)
 	box.add_child(info_label)
 	button.add_child(box)
 	button.pressed.connect(func(): _on_enemy_tapped(index))
@@ -256,7 +260,7 @@ func _make_hero_widget(index: int) -> Dictionary:
 	var hero: Dictionary = engine.heroes[index]
 	var panel := PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	panel.custom_minimum_size = Vector2(0, 96)
+	panel.custom_minimum_size = Vector2(0, 128)
 	# Tappbar: spelaren väljer vem som agerar på partyts tur.
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	panel.gui_input.connect(
@@ -265,27 +269,36 @@ func _make_hero_widget(index: int) -> Dictionary:
 				_select_hero(index)
 	)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 2)
-	# Klassemblem som porträtt – ger korten identitet.
-	var emblem := Icons.image(Icons.ABILITY.get("basic_attack", Icons.SKULL), 20)
+	box.add_theme_constant_override("separation", 3)
+	# Emblem kopplat till identiteten: klass, påbörjad väg eller rekryt.
+	var emblem := Icons.image(Icons.SKULL, 26)
 	emblem.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	box.add_child(emblem)
-	var name_label := UIKit.body(String(hero["name"]), 12)
+	var name_label := Label.new()
+	name_label.text = String(hero["name"])
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.add_theme_font_override("font", UIKit.FONT_BOLD)
+	name_label.add_theme_font_size_override("font_size", 13)
+	name_label.clip_text = true
 	box.add_child(name_label)
-	var hp := _bar_with_text(int(hero["hp"]), int(hero["max_hp"]), UIKit.COLOR_HP, 14)
+	# Identitetsrad: "Front · Tank" – vad hjälten ÄR, i ord.
+	var ident_label := UIKit.body("", 10)
+	ident_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ident_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.55))
+	box.add_child(ident_label)
+	var hp := _bar_with_text(int(hero["hp"]), int(hero["max_hp"]), UIKit.COLOR_HP, 16)
 	box.add_child(hp["bar"])
-	var mana_bar := UIKit.bar(int(hero["mana"]), int(hero["max_mana"]), UIKit.COLOR_MANA, 5)
-	box.add_child(mana_bar)
+	var mana := _bar_with_text(int(hero["mana"]), int(hero["max_mana"]), UIKit.COLOR_MANA, 12)
+	box.add_child(mana["bar"])
 	var info_label := UIKit.body("", 10)
 	info_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	info_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.6))
+	info_label.add_theme_color_override("font_color", UIKit.COLOR_WARN)
 	box.add_child(info_label)
 	# Inkommande skada PÅ hjälten (Slice & Dice-mönstret).
 	var threat_label := Label.new()
 	threat_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	threat_label.add_theme_font_override("font", UIKit.FONT_BOLD)
-	threat_label.add_theme_font_size_override("font_size", 13)
+	threat_label.add_theme_font_size_override("font_size", 14)
 	threat_label.add_theme_color_override("font_color", COLOR_THREAT)
 	box.add_child(threat_label)
 	panel.add_child(box)
@@ -293,9 +306,11 @@ func _make_hero_widget(index: int) -> Dictionary:
 		"panel": panel,
 		"emblem": emblem,
 		"name_label": name_label,
+		"ident_label": ident_label,
 		"hp_bar": hp["bar"],
 		"hp_text": hp["text"],
-		"mana_bar": mana_bar,
+		"mana_bar": mana["bar"],
+		"mana_text": mana["text"],
 		"info_label": info_label,
 		"threat_label": threat_label,
 	}
@@ -470,15 +485,16 @@ func _refresh(animate: bool) -> void:
 		widget["name_label"].add_theme_color_override(
 			"font_color", UIKit.COLOR_ACCENT if is_active else Color("e8e4f0")
 		)
-		_update_hero_emblem(widget, i)
+		_update_hero_identity(widget, i)
 		_set_bar(widget["hp_bar"], int(hero["hp"]), int(hero["max_hp"]), animate)
 		widget["hp_text"].text = (
 			"DOWN" if down else "%d/%d" % [int(hero["hp"]), int(hero["max_hp"])]
 		)
 		_set_bar(widget["mana_bar"], int(hero["mana"]), int(hero["max_mana"]), animate)
-		var row_tag := "F" if String(hero.get("row", "back")) == "front" else "B"
+		widget["mana_text"].text = "%d/%d" % [int(hero["mana"]), int(hero["max_mana"])]
 		var status := _status_text(hero)
-		widget["info_label"].text = row_tag + ("  " + status if status != "" else "")
+		widget["info_label"].text = status
+		widget["info_label"].visible = status != ""
 		var threat_text := (
 			"-%d" % threat if threat > 0 and not down and not engine.is_over() else ""
 		)
@@ -537,16 +553,19 @@ func _refresh(animate: bool) -> void:
 
 
 ## Klassemblemet tänds med accentfärg när hjälten låst sin klass.
-func _update_hero_emblem(widget: Dictionary, index: int) -> void:
+## Emblem + identitetsrad speglar vad hjälten ÄR: låst klass (accent),
+## påbörjad väg (ljus) eller rekryt. "Front · Tank" i ord under namnet.
+func _update_hero_identity(widget: Dictionary, index: int) -> void:
 	if Game.party == null or index >= Game.party.heroes.size():
 		return
-	var class_identity: String = Game.party.heroes[index].class_identity
+	var identity := Icons.hero_identity(Game.party.heroes[index])
 	var emblem: TextureRect = widget["emblem"]
-	if class_identity != "":
-		emblem.texture = Icons.CLASS_EMBLEM.get(class_identity, emblem.texture)
-		emblem.modulate = UIKit.COLOR_ACCENT
-	else:
-		emblem.modulate = Color(1, 1, 1, 0.45)
+	emblem.texture = identity["texture"]
+	emblem.modulate = identity["tint"]
+	var row_word := (
+		"Front" if String(engine.heroes[index].get("row", "back")) == "front" else "Back"
+	)
+	widget["ident_label"].text = "%s · %s" % [row_word, identity["label"]]
 
 
 func _set_bar(bar: ProgressBar, value: int, max_value: int, animate: bool) -> void:

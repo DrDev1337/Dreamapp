@@ -119,15 +119,15 @@ func _dungeon_row(party: PartyState, id: String) -> Control:
 
 func _hero_row(party: PartyState, index: int) -> Control:
 	var hero: Hero = party.heroes[index]
-	var class_label: String = LevelUp.AXIS_LABELS.get(hero.class_identity, "Recruit")
-	var row_tag := "F" if party.hero_row(index) == "front" else "B"
+	var identity := Icons.hero_identity(hero)
+	var row_word := "Front" if party.hero_row(index) == "front" else "Back"
 	var text_label := UIKit.body(
 		(
-			"[%s] %s – %s · HP %d · Atk %d · Mag %d"
+			"%s – %s · %s · HP %d · Atk %d · Mag %d"
 			% [
-				row_tag,
 				hero.hero_name,
-				class_label,
+				identity["label"],
+				row_word,
 				hero.total_stat("max_hp", party),
 				hero.total_stat("attack", party),
 				hero.total_stat("magic", party)
@@ -135,6 +135,4 @@ func _hero_row(party: PartyState, index: int) -> Control:
 		),
 		15
 	)
-	var icon: Texture2D = Icons.CLASS_EMBLEM.get(hero.class_identity, Icons.STAIRS)
-	var tint: Color = UIKit.COLOR_ACCENT if hero.class_identity != "" else Color(1, 1, 1, 0.35)
-	return Icons.labeled(icon, text_label, 24, tint)
+	return Icons.labeled(identity["texture"], text_label, 24, identity["tint"])
